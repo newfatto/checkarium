@@ -22,6 +22,7 @@ class CustomUserAdmin(UserAdmin):
         "telegram_id",
         "is_staff",
         "is_active",
+        "time_zone",
     )
     list_filter = (
         "is_staff",
@@ -52,6 +53,7 @@ class CustomUserAdmin(UserAdmin):
                     "avatar",
                     "bio",
                     "telegram_id",
+                    "time_zone",
                 )
             },
         ),

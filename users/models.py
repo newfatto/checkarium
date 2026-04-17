@@ -3,6 +3,9 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.urls import reverse
 
+from .validators import validate_time_zone
+
+
 
 class CustomUserManager(BaseUserManager):
     """Менеджер для кастомной модели пользователя с авторизацией по email."""
@@ -104,6 +107,13 @@ class CustomUser(AbstractUser):
         unique=True,
         verbose_name="Telegram ID",
         help_text="Заполняется автоматически через Telegram-бота.",
+    )
+
+    time_zone = models.CharField(
+        max_length=64,
+        default="UTC",
+        verbose_name="Часовой пояс",
+        validators=[validate_time_zone],
     )
 
     USERNAME_FIELD = "email"
