@@ -51,14 +51,14 @@ class CustomLoginView(LoginView):
 class CustomLogoutView(LogoutView):
     """Представление для выхода пользователя из системы."""
 
-    next_page = reverse_lazy("users:login")
+    next_page = reverse_lazy("home")
 
 
 class ProfileDetailView(LoginRequiredMixin, OnlyOwnerMixin, DetailView):
     """Представление для просмотра профиля пользователя."""
 
     model = CustomUser
-    template_name = "users/profile_detail.html"
+    template_name = "users/profile.html"
     context_object_name = "profile_user"
 
 
@@ -84,5 +84,5 @@ class ProfileDeleteView(LoginRequiredMixin, OnlyOwnerMixin, DeleteView):
 
     model = CustomUser
     template_name = "users/profile_confirm_delete.html"
-    success_url = reverse_lazy("users:login")
+    success_url = reverse_lazy("home")
     context_object_name = "profile_user"
