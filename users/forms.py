@@ -11,9 +11,35 @@ class CustomUserCreationForm(UserCreationForm):
         model = CustomUser
         fields = ("email", "first_name", "password1", "password2")
         widgets = {
-            "email": forms.EmailInput(attrs={"placeholder": "Введите email"}),
-            "first_name": forms.TextInput(attrs={"placeholder": "Введите имя"}),
+            "email": forms.EmailInput(
+                attrs={
+                    "placeholder": "Введите email",
+                    "class": "form-control-ui",
+                }
+            ),
+            "first_name": forms.TextInput(
+                attrs={
+                    "placeholder": "Введите имя",
+                    "class": "form-control-ui",
+                }
+            ),
         }
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Настроить отображение полей формы."""
+        super().__init__(*args, **kwargs)
+        self.fields["password1"].widget.attrs.update(
+            {
+                "placeholder": "Введите пароль",
+                "class": "form-control-ui",
+            }
+        )
+        self.fields["password2"].widget.attrs.update(
+            {
+                "placeholder": "Повторите пароль",
+                "class": "form-control-ui",
+            }
+        )
 
 
 class CustomAuthenticationForm(AuthenticationForm):
@@ -21,12 +47,23 @@ class CustomAuthenticationForm(AuthenticationForm):
 
     username = forms.EmailField(
         label="Email",
-        widget=forms.EmailInput(attrs={"autofocus": True, "placeholder": "Введите email"}),
+        widget=forms.EmailInput(
+            attrs={
+                "autofocus": True,
+                "placeholder": "Введите email",
+                "class": "form-control-ui",
+            }
+        ),
     )
     password = forms.CharField(
         label="Пароль",
         strip=False,
-        widget=forms.PasswordInput(attrs={"placeholder": "Введите пароль"}),
+        widget=forms.PasswordInput(
+            attrs={
+                "placeholder": "Введите пароль",
+                "class": "form-control-ui",
+            }
+        ),
     )
 
 
@@ -45,12 +82,46 @@ class CustomUserUpdateForm(forms.ModelForm):
             "bio",
         )
         widgets = {
-            "email": forms.EmailInput(attrs={"placeholder": "Введите email"}),
-            "first_name": forms.TextInput(attrs={"placeholder": "Введите имя"}),
-            "last_name": forms.TextInput(attrs={"placeholder": "Введите фамилию"}),
-            "city": forms.TextInput(attrs={"placeholder": "Введите город"}),
-            "phone_number": forms.TextInput(attrs={"placeholder": "Введите телефон"}),
+            "email": forms.EmailInput(
+                attrs={
+                    "placeholder": "Введите email",
+                    "class": "form-control-ui",
+                }
+            ),
+            "first_name": forms.TextInput(
+                attrs={
+                    "placeholder": "Введите имя",
+                    "class": "form-control-ui",
+                }
+            ),
+            "last_name": forms.TextInput(
+                attrs={
+                    "placeholder": "Введите фамилию",
+                    "class": "form-control-ui",
+                }
+            ),
+            "city": forms.TextInput(
+                attrs={
+                    "placeholder": "Введите город",
+                    "class": "form-control-ui",
+                }
+            ),
+            "phone_number": forms.TextInput(
+                attrs={
+                    "placeholder": "Введите телефон",
+                    "class": "form-control-ui",
+                }
+            ),
             "bio": forms.Textarea(
-                attrs={"rows": 4, "placeholder": "Расскажите немного о себе"}
+                attrs={
+                    "rows": 4,
+                    "placeholder": "Расскажите немного о себе",
+                    "class": "form-textarea-ui",
+                }
             ),
         }
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Настроить отображение полей формы."""
+        super().__init__(*args, **kwargs)
+        self.fields["avatar"].widget.attrs.update({"class": "form-control-ui"})

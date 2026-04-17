@@ -1,19 +1,19 @@
 {% extends 'base.html' %}
 
-{% block title %}Регистрация | Checkarium{% endblock %}
+{% block title %}Редактирование профиля | Checkarium{% endblock %}
 
 {% block content %}
 <section class="page-header">
     <div class="page-header__content">
-        <h1 class="page-title">Регистрация</h1>
+        <h1 class="page-title">Редактирование профиля</h1>
         <p class="text-soft">
-            Создайте аккаунт, чтобы вести учёт питомцев и событий ухода.
+            Обновите информацию о себе.
         </p>
     </div>
 </section>
 
 <section class="form-card mx-auto">
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
@@ -44,11 +44,14 @@
 
         <div class="mt-4 d-flex gap-3 flex-wrap">
             <button type="submit" class="btn-ui btn-ui--primary">
-                Зарегистрироваться
+                Сохранить изменения
             </button>
 
-            <a href="{% url 'users:login' %}" class="btn-ui btn-ui--ghost">
-                Уже есть аккаунт
+            <a
+                href="{% url 'users:profile_detail' pk=profile_user.pk %}"
+                class="btn-ui btn-ui--ghost"
+            >
+                Отмена
             </a>
         </div>
     </form>
