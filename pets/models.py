@@ -96,6 +96,12 @@ class Pet(models.Model):
         verbose_name="Фото",
     )
 
+    feeding_notes = models.TextField(
+        blank=True,
+        verbose_name="Чем кормить",
+        help_text="Например: мышь-голыш, крысёныш, сверчки, тараканы, овощная смесь",
+    )
+
     notes = models.TextField(
         blank=True,
         verbose_name="Комментарий"
@@ -126,6 +132,7 @@ class Pet(models.Model):
 
     def get_absolute_url(self) -> str:
         return reverse("pets:pet_detail", kwargs={"pk": self.pk})
+
 
     class Meta:
         ordering = ["-created_at"]
@@ -250,6 +257,9 @@ class Event(models.Model):
 
             if fields_to_update:
                 pet.save(update_fields=fields_to_update)
+
+    def get_absolute_url(self) -> str:
+        return reverse("pets:event_detail", kwargs={"pk": self.pk})
 
     class Meta:
         ordering = ["-created_at"]
