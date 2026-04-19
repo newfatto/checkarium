@@ -109,6 +109,27 @@ class CustomUser(AbstractUser):
         help_text="Заполняется автоматически через Telegram-бота.",
     )
 
+    telegram_link_token = models.CharField(
+        max_length=64,
+        blank=True,
+        null=True,
+        unique=True,
+        verbose_name="Токен привязки Telegram",
+        help_text="Одноразовый токен для привязки Telegram через бота.",
+    )
+
+    telegram_link_token_created_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name="Время создания токена привязки Telegram",
+    )
+
+    telegram_linked_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name="Время привязки Telegram",
+    )
+
     care_notifications_enabled = models.BooleanField(
         default=False,
         verbose_name="Уведомления об уходе",

@@ -90,13 +90,25 @@
 
         <div class="d-flex flex-column gap-2 align-items-sm-end">
             {% if profile_user.care_notifications_enabled %}
-                <button type="button" class="btn-ui btn-ui--danger" disabled>
-                    ВЫ ПОЛУЧАЕТЕ УВЕДОМЛЕНИЯ ОБ УХОДЕ
-                </button>
+                <form method="post" action="{% url 'users:telegram_disable' pk=profile_user.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-ui btn-ui--danger">
+                        ВЫ ПОЛУЧАЕТЕ УВЕДОМЛЕНИЯ ОБ УХОДЕ
+                    </button>
+                </form>
             {% else %}
-                <button type="button" class="btn-ui btn-ui--primary" disabled>
-                    ПОЛУЧАТЬ УВЕДОМЛЕНИЯ ОБ УХОДЕ
-                </button>
+                {% if profile_user.telegram_id %}
+                    <form method="post" action="{% url 'users:telegram_enable' pk=profile_user.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-ui btn-ui--primary">
+                            ПОЛУЧАТЬ УВЕДОМЛЕНИЯ ОБ УХОДЕ
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'users:telegram_connect' pk=profile_user.pk %}" class="btn-ui btn-ui--primary">
+                        ПОЛУЧАТЬ УВЕДОМЛЕНИЯ ОБ УХОДЕ
+                    </a>
+                {% endif %}
             {% endif %}
 
             {% if profile_user.telegram_id %}
