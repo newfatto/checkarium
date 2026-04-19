@@ -45,7 +45,7 @@
                         Пользователь
                         {% endif %}
                     </h2>
-                    <p class="text-soft mb-0">Основная информация профиля.</p>
+                    <p class="text-soft mb-0">Основная информация профиля и настройки уведомлений.</p>
                 </div>
 
                 {% if request.user == profile_user %}
@@ -71,11 +71,43 @@
                 <div><strong>Email:</strong> {{ profile_user.email }}</div>
                 <div><strong>Город:</strong> {{ profile_user.city|default:"—" }}</div>
                 <div><strong>Телефон:</strong> {{ profile_user.phone_number|default:"—" }}</div>
+                <div><strong>Часовой пояс:</strong> {{ profile_user.time_zone|default:"—" }}</div>
                 <div><strong>О себе:</strong> {{ profile_user.bio|default:"—" }}</div>
             </div>
         </div>
     </div>
 </section>
+
+{% if request.user == profile_user %}
+<section class="card-ui mb-4">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <h2 class="section-title mb-2">Telegram-уведомления</h2>
+            <p class="text-soft mb-0">
+                Ежедневные уведомления об уходе приходят в 07:00 по вашему часовому поясу.
+            </p>
+        </div>
+
+        <div class="d-flex flex-column gap-2 align-items-sm-end">
+            {% if profile_user.care_notifications_enabled %}
+                <button type="button" class="btn-ui btn-ui--danger" disabled>
+                    ВЫ ПОЛУЧАЕТЕ УВЕДОМЛЕНИЯ ОБ УХОДЕ
+                </button>
+            {% else %}
+                <button type="button" class="btn-ui btn-ui--primary" disabled>
+                    ПОЛУЧАТЬ УВЕДОМЛЕНИЯ ОБ УХОДЕ
+                </button>
+            {% endif %}
+
+            {% if profile_user.telegram_id %}
+                <span class="text-soft">Telegram подключён</span>
+            {% else %}
+                <span class="text-soft">Telegram пока не подключён</span>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
 
 <section class="card-ui mb-4">
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
