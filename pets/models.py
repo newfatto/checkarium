@@ -240,6 +240,7 @@ class Event(models.Model):
 
     def save(self, *args, **kwargs):
         """При сохранении измерения обновляем параметры питомца."""
+
         self.full_clean()
         super().save(*args, **kwargs)
 

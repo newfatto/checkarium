@@ -8,9 +8,16 @@ from users.constants import TIME_ZONE_CHOICES
 class CustomUserCreationForm(UserCreationForm):
     """Форма регистрации пользователя."""
 
+    time_zone = forms.ChoiceField(
+        choices=TIME_ZONE_CHOICES,
+        label="Часовой пояс",
+        widget=forms.Select(attrs={"class": "form-control-ui"}),
+        help_text="Выберите ваш часовой пояс. Например: UTC+3 для Москвы.",
+    )
+
     class Meta:
         model = CustomUser
-        fields = ("email", "first_name", "password1", "password2")
+        fields = ("email", "first_name", "time_zone", "password1", "password2")
         widgets = {
             "email": forms.EmailInput(
                 attrs={
@@ -21,6 +28,11 @@ class CustomUserCreationForm(UserCreationForm):
             "first_name": forms.TextInput(
                 attrs={
                     "placeholder": "Введите имя",
+                    "class": "form-control-ui",
+                }
+            ),
+            "time_zone": forms.Select(
+                attrs={
                     "class": "form-control-ui",
                 }
             ),
