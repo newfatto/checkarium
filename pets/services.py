@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Iterable
+from collections.abc import Sequence
 
 from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
@@ -118,6 +116,103 @@ def get_no_handling_until(event: Event) -> datetime | None:
         return None
     return event.event_datetime + timedelta(days=event.no_handling_days)
 
+def _format_signed_diff(value: Decimal | int | float) -> str:
+    """Возвращает разницу со знаком для показа в комментарии."""
+    decimal_value = Decimal(str(value))
+
+    sign = "+" if decimal_value > 0 else "-"
+    abs_value = abs(decimal_value)
+
+    if abs_value == abs_value.to_integral():
+        return f"{sign}{int(abs_value)}"
+    return f"{sign}{abs_value.normalize()}"
+
+
+def get_previous_measurement_event(event: Event) -> Event | None:
+    """Возвращает предыдущее событие измерения для того же питомца."""
+    if not event.pet_id or not event.event_datetime:
+        return None
+
+    qs = Event.objects.filter(
+        pet_id=event.pet_id,
+        event_type=Event.EventType.MEASUREMENT,
+        event_datetime__lt=event.event_datetime,
+    ).order_by("-event_datetime", "-pk")
+
+    if event.pk:
+        qs = qs.exclude(pk=event.pk)
+
+    return qs.first()
+
+
+def get_measurement_comment_lines(event: Event) -> list[str]:
+    """Формирует строки комментария для события измерения."""
+    if event.event_type != Event.EventType.MEASUREMENT:
+        return []
+
+    lines: list[str] = []
+    previous_event = get_previous_measurement_event(event)
+
+    if event.weight_grams is not None:
+        weight_line = f"Вес: {event.weight_grams} г"
+        if previous_event and previous_event.weight_grams is not None:
+            diff = event.weight_grams - previous_event.weight_grams
+            if diff != 0:
+                weight_line += f" ({_format_signed_diff(diff)} г)"
+        lines.append(weight_line)
+
+    if event.length_cm is not None:
+        current_length = Decimal(str(event.length_cm))
+        if current_length == current_length.to_integral():
+            length_value = f"{int(current_length)}"
+        else:
+            length_value = f"{current_length.normalize()}"
+
+        length_line = f"Длина: {length_value} см"
+
+        if previous_event and previous_event.length_cm is not None:
+            prev_length = Decimal(str(previous_event.length_cm))
+            diff = current_length - prev_length
+            if diff != 0:
+                length_line += f" ({_format_signed_diff(diff)} см)"
+
+        lines.append(length_line)
+
+    return lines
+
+
+def get_upcoming_pet_tasks(pet: Pet) -> list[str]:
+    """Возвращает список ближайших действий по питомцу."""
+    event_type_map: Sequence[tuple[str, str]] = (
+        (Event.EventType.FEEDING, "Покормить"),
+        (Event.EventType.CLEANING, "Убраться"),
+        (Event.EventType.MEASUREMENT, "Измерить"),
+    )
+
+    tasks: list[tuple[datetime, str]] = []
+
+    for event_type, label in event_type_map:
+        last_event = (
+            pet.events.filter(
+                event_type=event_type,
+                repeat_after_days__isnull=False,
+            )
+            .order_by("-event_datetime", "-pk")
+            .first()
+        )
+
+        if not last_event:
+            continue
+
+        next_dt = get_next_repeat_datetime(last_event)
+        if not next_dt:
+            continue
+
+        tasks.append((next_dt, f"{label} {timezone.localtime(next_dt).strftime('%d.%m.%Y')}"))
+
+    tasks.sort(key=lambda item: item[0])
+    return [text for _, text in tasks]
+
 
 def get_repeat_comment(event: Event) -> str:
     """Формирует строку следующего повторения события."""
@@ -147,6 +242,9 @@ def get_handling_comment(event: Event) -> str:
 def get_event_comment_lines(event: Event) -> list[str]:
     """Возвращает список строк комментария для таблиц."""
     lines: list[str] = []
+
+    if event.event_type == Event.EventType.MEASUREMENT:
+        lines.extend(get_measurement_comment_lines(event))
 
     repeat_line = get_repeat_comment(event)
     handling_line = get_handling_comment(event)

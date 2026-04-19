@@ -221,9 +221,6 @@ img {
   padding: var(--space-5);
 }
 
-.card-ui + .card-ui {
-  margin-top: var(--space-5);
-}
 
 /* Карточка питомца */
 .pet-card {
@@ -884,3 +881,122 @@ img {
   color: var(--color-primary);
 }
 
+/* Главная страница */
+
+.home-features-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+}
+
+@media (min-width: 768px) {
+  .home-features-grid {
+    grid-template-columns: repeat(3, 1fr);
+    align-items: stretch;
+  }
+}
+
+.home-feature-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.home-feature-card__number {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-secondary);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-md);
+}
+
+.home-feature-card__title {
+  margin: 0;
+}
+
+.home-feature-card__list {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--color-text-soft);
+}
+
+.home-feature-card__list li + li {
+  margin-top: var(--space-2);
+}
+
+
+/* Блок "Как работает" */
+
+.features-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+}
+
+@media (min-width: 768px) {
+  .features-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
+  }
+}
+
+.features-grid .card-ui {
+  margin-top: 0;
+}
+
+.feature-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  justify-content: flex-start;
+}
+
+/* Номер */
+.feature-card__number {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: var(--color-secondary);
+  color: var(--color-primary);
+
+  font-weight: var(--font-weight-bold);
+}
+
+/* Заголовок */
+.feature-card__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.feature-card__list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--color-text-soft);
+  flex-grow: 1;
+}
+
+.feature-card__list li + li {
+  margin-top: var(--space-2);
+}
+
+
+.feature-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}

@@ -21,24 +21,37 @@
 
 <section class="card-ui mb-4">
     <div class="d-flex flex-column gap-3">
-        <div><strong>Питомец:</strong> <a href="{% url 'pets:pet_detail' pk=event.pet.pk %}">{{ event.pet.name }}</a></div>
+        <div><strong>Питомец:</strong> <a href="{% url 'pets:pet_detail' pk=event.pet.pk %}">{{ event.pet.name }}</a>
+        </div>
         <div><strong>Тип события:</strong> {{ event.get_event_type_display }}</div>
         <div><strong>Дата и время:</strong> {{ event.event_datetime|date:"d.m.Y H:i" }}</div>
 
         {% if event.repeat_after_days %}
-            <div><strong>Повторить через:</strong> {{ event.repeat_after_days }} дн.</div>
+        <div><strong>Повторить через:</strong> {{ event.repeat_after_days }} дн.</div>
         {% endif %}
 
         {% if event.no_handling_days %}
-            <div><strong>Нельзя трогать:</strong> {{ event.no_handling_days }} дн.</div>
+        <div><strong>Нельзя трогать:</strong> {{ event.no_handling_days }} дн.</div>
         {% endif %}
 
+        {% if event.event_type == 'measurement' and measurement_comment_lines %}
+        {% for line in measurement_comment_lines %}
+        {% if "Вес:" in line %}
+        <div><strong>Вес:</strong> {{ line|cut:"Вес: " }}</div>
+        {% elif "Длина:" in line %}
+        <div><strong>Длина:</strong> {{ line|cut:"Длина: " }}</div>
+        {% else %}
+        <div>{{ line }}</div>
+        {% endif %}
+        {% endfor %}
+        {% else %}
         {% if event.weight_grams %}
-            <div><strong>Вес:</strong> {{ event.weight_grams }} г</div>
+        <div><strong>Вес:</strong> {{ event.weight_grams }} г</div>
         {% endif %}
 
         {% if event.length_cm %}
-            <div><strong>Длина:</strong> {{ event.length_cm }} см</div>
+        <div><strong>Длина:</strong> {{ event.length_cm }} см</div>
+        {% endif %}
         {% endif %}
 
         <div><strong>Комментарий:</strong></div>

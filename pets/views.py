@@ -20,8 +20,10 @@ from .services import (
     build_pet_card_context,
     can_edit_pet,
     can_view_pet,
-    get_pet_age_display,
+    get_measurement_comment_lines,
     get_owner_display,
+    get_pet_age_display,
+    get_upcoming_pet_tasks,
     is_moderator,
     pet_can_handle,
     pet_is_in_shedding,
@@ -96,6 +98,7 @@ class PetDetailView(PetDetailPermissionMixin, DetailView):
         context["can_edit_pet"] = can_edit_pet(self.request.user, pet)
         context["can_handle"] = pet_can_handle(pet)
         context["is_in_shedding"] = pet_is_in_shedding(pet)
+        context["upcoming_tasks"] = get_upcoming_pet_tasks(pet)
         return context
 
 
@@ -185,6 +188,11 @@ class EventDetailView(LoginRequiredMixin, EventOwnerOrModeratorMixin, DetailView
     model = Event
     template_name = "pets/event_detail.html"
     context_object_name = "event"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["measurement_comment_lines"] = get_measurement_comment_lines(self.object)
+        return context
 
 
 class EventCreateView(LoginRequiredMixin, ModeratorAccessMixin, CreateView):
