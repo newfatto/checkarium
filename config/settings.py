@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
@@ -8,6 +9,8 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = True if os.getenv('DEBUG') == 'True' else False
+
+SITE_URL = os.getenv("SITE_URL", "http://127.0.0.1:8000")
 
 ALLOWED_HOSTS = []
 
@@ -107,3 +110,10 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "")
+
+CELERY_BEAT_SCHEDULE = {
+    "send-daily-care-notifications-every-15-minutes": {
+        "task": "users.tasks.send_daily_care_notifications",
+        "schedule": crontab(minute="*/15"),
+    },
+}

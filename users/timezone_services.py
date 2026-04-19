@@ -4,6 +4,9 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.utils import timezone
 
+from datetime import datetime
+from django.utils import timezone
+
 
 UTC_OFFSET_PATTERN = re.compile(r"^UTC(?P<sign>[+-])(?P<hours>\d{2}):(?P<minutes>\d{2})$")
 
@@ -30,3 +33,7 @@ def activate_user_timezone(user) -> None:
         timezone.activate(get_user_tzinfo(user.time_zone))
     else:
         timezone.deactivate()
+
+def get_user_local_now(user) -> datetime:
+    """Возвращает текущее локальное время пользователя."""
+    return timezone.now().astimezone(get_user_tzinfo(user.time_zone))

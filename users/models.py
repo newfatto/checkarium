@@ -136,6 +136,12 @@ class CustomUser(AbstractUser):
         help_text="Получать ежедневные уведомления в Telegram.",
     )
 
+    last_care_notification_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name="Дата последнего уведомления об уходе",
+    )
+
     time_zone = models.CharField(
         max_length=64,
         default="UTC",
