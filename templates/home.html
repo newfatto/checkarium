@@ -1,56 +1,25 @@
 {% extends 'base.html' %}
 
-{% block title %}Checkarium{% endblock %}
+{% block title %}Главная | Checkarium{% endblock %}
 
 {% block content %}
 <section class="page-header">
     <div class="page-header__content">
         <h1 class="page-title">Checkarium</h1>
         <p class="text-soft">
-            Удобный трекер ухода за рептилиями: питомцы, события, статусы и напоминания.
+            Публичные карточки питомцев, которыми пользователи разрешили делиться.
         </p>
     </div>
-
-    <div class="page-header__actions">
-        <a href="#" class="btn-ui btn-ui--primary">Добавить питомца</a>
-        <a href="#" class="btn-ui btn-ui--ghost">Посмотреть события</a>
-    </div>
 </section>
 
-<section class="status-panel status-panel--success">
-    <div class="status-panel__title">Сегодня всё спокойно</div>
-    <div class="status-panel__text">
-        На этой странице позже можно будет показывать сводку по питомцам и задачам на сегодня.
-    </div>
-</section>
-
-<section>
-    <h2 class="section-title">Пример карточки питомца</h2>
-
-    <div class="pet-grid">
-        <article class="pet-card">
-            <div class="pet-card__image-wrap"></div>
-
-            <div class="pet-card__body">
-                <h3 class="pet-card__title">Маисовый полоз</h3>
-                <div class="pet-card__meta">Самец • 2 года</div>
-
-                <div class="pet-card__stats">
-                    <span class="metric-chip">120 г</span>
-                    <span class="metric-chip">80 см</span>
-                    <span class="metric-chip">Последнее кормление: 2 дня назад</span>
-                </div>
-
-                <div class="mb-3">
-                    <span class="badge-ui badge-ui--success">Можно брать на руки</span>
-                </div>
-
-                <div class="pet-card__actions">
-                    <a href="#" class="btn-ui btn-ui--primary btn-ui--sm">Открыть</a>
-                    <a href="#" class="btn-ui btn-ui--ghost btn-ui--sm">События</a>
-                </div>
-            </div>
-        </article>
-    </div>
-</section>
+{% if public_pet_cards %}
+    {% include 'pets/includes/pet_cards_grid.html' with pet_cards=public_pet_cards %}
+{% else %}
+    <section class="empty-state">
+        <div class="empty-state__title">Пока нет публичных питомцев</div>
+        <div class="empty-state__text">
+            Когда пользователи включат показ своих животных, карточки появятся здесь.
+        </div>
+    </section>
+{% endif %}
 {% endblock %}

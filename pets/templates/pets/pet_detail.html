@@ -11,10 +11,12 @@
         </p>
     </div>
 
+    {% if can_edit_pet %}
     <div class="page-header__actions">
         <a href="{% url 'pets:pet_update' pk=pet.pk %}" class="btn-ui btn-ui--primary">Редактировать</a>
         <a href="{% url 'pets:pet_delete' pk=pet.pk %}" class="btn-ui btn-ui--danger">Удалить</a>
     </div>
+    {% endif %}
 </section>
 
 <section class="card-ui mb-4">
@@ -37,14 +39,30 @@
 
         <div class="flex-grow-1">
             <div class="pet-card__stats mb-4">
-                <span class="badge-ui badge-ui--neutral">{{ pet.get_status_display }}</span>
                 <span class="metric-chip">Пол: {{ pet.get_sex_display }}</span>
 
-                {% if pet.weight_grams %}
-                <span class="metric-chip">Вес: {{ pet.weight_grams }} г</span>
+                {% if pet_age_display %}
+                <span class="metric-chip">Возраст: {{ pet_age_display }}</span>
                 {% endif %}
+
+                {% if pet.weight_grams %}
+                <span class="metric-chip">{{ pet.weight_grams }} г</span>
+                {% endif %}
+
                 {% if pet.length_cm %}
-                <span class="metric-chip">Длина: {{ pet.length_cm }} см</span>
+                <span class="metric-chip">{{ pet.length_cm|floatformat:0 }} см</span>
+                {% endif %}
+
+                {% if is_owner %}
+                {% if is_in_shedding %}
+                <span class="badge-ui badge-ui--warning">В линьке</span>
+                {% endif %}
+
+                {% if can_handle %}
+                <span class="badge-ui badge-ui--success">Можно трогать</span>
+                {% else %}
+                <span class="badge-ui badge-ui--danger">Нельзя трогать</span>
+                {% endif %}
                 {% endif %}
             </div>
 
@@ -56,32 +74,24 @@
                     {{ pet.birth_date|date:"d.m.Y"|default:"—" }}
                     {% if pet_age_display %}({{ pet_age_display }}){% endif %}
                 </div>
-                {% if request.user == pet.owner %}
+
+                {% if is_owner %}
                 <div><strong>Дата появления у вас:</strong> {{ pet.acquired_date|date:"d.m.Y"|default:"—" }}</div>
                 {% else %}
                 <div><strong>Дата появления у владельца:</strong> {{ pet.acquired_date|date:"d.m.Y"|default:"—" }}</div>
+                <div><strong>Владелец:</strong> {{ owner_display }}</div>
                 {% endif %}
+
                 {% if pet.feeding_notes %}
                 <div><strong>Рацион:</strong> {{ pet.feeding_notes|linebreaksbr }}</div>
                 {% endif %}
-                {% if request.user != pet.owner %}
-                <div>
-                    <strong>Владелец:</strong>
-                    {% if pet.owner.first_name %}
-                    {{ pet.owner.first_name }}
-                    {% if pet.owner.last_name %} {{ pet.owner.last_name }}{% endif %}
-                    {% else %}
-                    Пользователь
-                    {% endif %}
-                </div>
-                {% endif %}
-
-
             </div>
         </div>
     </div>
 </section>
-{% if request.user == pet.owner %}
+
+
+{% if is_owner or can_edit_pet %}
 {% if pet.notes %}
 <section class="card-ui mb-4">
     <h2 class="section-title mb-3">Комментарий</h2>

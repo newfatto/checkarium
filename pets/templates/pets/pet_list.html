@@ -6,13 +6,7 @@
 <section class="page-header">
     <div class="page-header__content">
         <h1 class="page-title">Питомцы</h1>
-        <p class="text-soft">
-            {% if request.user.is_superuser or request.user.groups.all %}
-                Список животных, доступных для просмотра и управления.
-            {% else %}
-                Ваши животные и их карточки.
-            {% endif %}
-        </p>
+        <p class="text-soft">Ваши питомцы и карточки животных.</p>
     </div>
 
     <div class="page-header__actions">
@@ -22,48 +16,8 @@
     </div>
 </section>
 
-{% if pets %}
-    <section class="pet-grid">
-        {% for pet in pets %}
-            <article class="pet-card">
-                <div class="pet-card__image-wrap">
-                    {% if pet.photo %}
-                        <img src="{{ pet.photo.url }}" alt="{{ pet.name }}" class="pet-card__image">
-                    {% endif %}
-                </div>
-
-                <div class="pet-card__body">
-                    <h2 class="pet-card__title">{{ pet.name }}</h2>
-                    <div class="pet-card__meta">
-                        {{ pet.get_animal_type_display }} • {{ pet.species_name }}
-                    </div>
-
-                    <div class="pet-card__stats">
-                        <span class="badge-ui badge-ui--neutral">{{ pet.get_status_display }}</span>
-
-                        {% if pet.sex %}
-                            <span class="metric-chip">{{ pet.get_sex_display }}</span>
-                        {% endif %}
-                        {% if pet.weight_grams %}
-                            <span class="metric-chip">{{ pet.weight_grams }} г</span>
-                        {% endif %}
-                        {% if pet.length_cm %}
-                            <span class="metric-chip">{{ pet.length_cm }} см</span>
-                        {% endif %}
-                    </div>
-
-                    <div class="pet-card__actions">
-                        <a href="{% url 'pets:pet_detail' pk=pet.pk %}" class="btn-ui btn-ui--primary btn-ui--sm">
-                            Карточка
-                        </a>
-                        <a href="{% url 'pets:pet_update' pk=pet.pk %}" class="btn-ui btn-ui--ghost btn-ui--sm">
-                            Редактировать
-                        </a>
-                    </div>
-                </div>
-            </article>
-        {% endfor %}
-    </section>
+{% if pet_cards %}
+    {% include 'pets/includes/pet_cards_grid.html' with pet_cards=pet_cards %}
 {% else %}
     <section class="empty-state">
         <div class="empty-state__title">Питомцев пока нет</div>

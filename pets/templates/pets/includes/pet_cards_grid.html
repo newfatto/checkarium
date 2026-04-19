@@ -1,0 +1,86 @@
+<div class="pet-grid">
+    {% for card in pet_cards %}
+        <article class="pet-card">
+            <div class="pet-card__image-wrap">
+                {% if card.pet.photo %}
+                    {% if request.user.is_authenticated %}
+                        <a href="{% url 'pets:pet_detail' pk=card.pet.pk %}">
+                            <img src="{{ card.pet.photo.url }}" alt="{{ card.pet.name }}" class="pet-card__image">
+                        </a>
+                    {% else %}
+                        <a href="{% url 'users:login' %}?next={% url 'pets:pet_detail' pk=card.pet.pk %}">
+                            <img src="{{ card.pet.photo.url }}" alt="{{ card.pet.name }}" class="pet-card__image">
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <div class="pet-card__body">
+                <h3 class="pet-card__title">{{ card.pet.name }}</h3>
+
+                <div class="pet-card__meta">
+                    {{ card.pet.get_animal_type_display }} • {{ card.pet.species_name }}
+                </div>
+
+                {% if card.pet.morph %}
+                    <div class="text-soft text-small mb-2">{{ card.pet.morph }}</div>
+                {% endif %}
+
+                <div class="pet-card__stats">
+                    <span class="metric-chip">Пол: {{ card.pet.get_sex_display }}</span>
+
+                    {% if card.pet.birth_date %}
+                        <span class="metric-chip">
+                            Возраст:
+                            {% if card.pet_age_display %}
+                                {{ card.pet_age_display }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </span>
+                    {% endif %}
+
+                    {% if card.pet.weight_grams %}
+                        <span class="metric-chip">{{ card.pet.weight_grams }} г</span>
+                    {% endif %}
+
+                    {% if card.pet.length_cm %}
+                        <span class="metric-chip">{{ card.pet.length_cm|floatformat:0 }} см</span>
+                    {% endif %}
+                </div>
+
+                {% if card.can_view_owner and not card.is_owner %}
+                    <div class="text-soft text-small mb-3">
+                        <strong>Владелец:</strong> {{ card.owner_display }}
+                    </div>
+                {% endif %}
+
+                {% if card.is_owner %}
+                    <div class="pet-card__stats">
+                        {% if card.is_in_shedding %}
+                            <span class="badge-ui badge-ui--warning">В линьке</span>
+                        {% endif %}
+
+                        {% if card.can_handle %}
+                            <span class="badge-ui badge-ui--success">Можно трогать</span>
+                        {% else %}
+                            <span class="badge-ui badge-ui--danger">Нельзя трогать</span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <div class="pet-card__actions">
+                    {% if request.user.is_authenticated %}
+                        <a href="{% url 'pets:pet_detail' pk=card.pet.pk %}" class="btn-ui btn-ui--ghost btn-ui--sm">
+                            Подробнее
+                        </a>
+                    {% else %}
+                        <a href="{% url 'users:login' %}?next={% url 'pets:pet_detail' pk=card.pet.pk %}" class="btn-ui btn-ui--ghost btn-ui--sm">
+                            Подробнее
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </article>
+    {% endfor %}
+</div>

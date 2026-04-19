@@ -596,17 +596,19 @@ img {
 
 /* Десктоп-таблица */
 .table-wrap {
-  overflow-x: auto;
+  width: 100%;
+  overflow-x: visible;
+  overflow-y: visible;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
+  position: relative;
 }
 
 .table-ui {
   width: 100%;
   border-collapse: collapse;
-  min-width: 720px;
 }
 
 .table-ui th,
@@ -614,7 +616,7 @@ img {
   padding: 14px 16px;
   text-align: left;
   border-bottom: 1px solid var(--color-border);
-  vertical-align: middle;
+  vertical-align: top;
 }
 
 .table-ui th {
@@ -660,6 +662,124 @@ img {
   display: flex;
   gap: var(--space-3);
   flex-wrap: wrap;
+}
+
+.table-ui--events {
+  width: 100%;
+  min-width: 100%;
+  table-layout: fixed;
+}
+
+.table-ui--events th {
+  vertical-align: top;
+}
+
+.table-ui--events th:nth-child(1),
+.table-ui--events td:nth-child(1) {
+  width: 18%;
+}
+
+.table-ui--events th:nth-child(2),
+.table-ui--events td:nth-child(2) {
+  width: 16%;
+}
+
+.table-ui--events th:nth-child(3),
+.table-ui--events td:nth-child(3) {
+  width: 16%;
+}
+
+.table-ui--events th:nth-child(4),
+.table-ui--events td:nth-child(4) {
+  width: 35%;
+}
+
+.table-ui--events th:nth-child(5),
+.table-ui--events td:nth-child(5) {
+  width: 15%;
+}
+
+.table-empty-cell {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: 32px 16px;
+}
+
+.table-head-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.table-head-menu__summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.table-head-menu__summary::-webkit-details-marker {
+  display: none;
+}
+
+.table-head-menu__summary:hover {
+  color: var(--color-primary);
+}
+
+.table-head-menu__icon {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.table-head-menu[open] .table-head-menu__icon {
+  color: var(--color-primary);
+}
+
+.table-head-menu__dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 300;
+  min-width: 220px;
+  max-width: 280px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 12px;
+  background-color: #ffffff;
+  opacity: 1;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.table-head-menu__check,
+.table-head-menu__radio {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.table-head-menu__check:last-child,
+.table-head-menu__radio:last-child {
+  margin-bottom: 0;
+}
+
+.table-head-menu__check input,
+.table-head-menu__radio input {
+  margin-top: 3px;
+}
+
+@media (max-width: 767px) {
+  .table-wrap {
+    display: none;
+  }
 }
 
 /* Мобильный формат вместо таблицы */
@@ -763,3 +883,4 @@ img {
 .nav-link-ui.active {
   color: var(--color-primary);
 }
+

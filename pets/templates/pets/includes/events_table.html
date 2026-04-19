@@ -1,0 +1,169 @@
+<div class="table-wrap">
+    <table class="table-ui table-ui--events">
+        <thead>
+            <tr>
+                <th>
+                    {% if filter_pets %}
+                        <details class="table-head-menu">
+                            <summary class="table-head-menu__summary">
+                                <span>Питомец</span>
+                                <span class="table-head-menu__icon">▾</span>
+                            </summary>
+                            <div class="table-head-menu__dropdown">
+                                {% for pet in filter_pets %}
+                                    <label class="table-head-menu__check">
+                                        <input
+                                            type="checkbox"
+                                            name="pet"
+                                            value="{{ pet.pk }}"
+                                            {% if pet.pk|stringformat:"s" in selected_pet_ids %}checked{% endif %}
+                                            onchange="this.form.submit()"
+                                        >
+                                        <span>{{ pet.name }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </details>
+                    {% else %}
+                        <span>Питомец</span>
+                    {% endif %}
+                </th>
+
+                <th>
+                    {% if event_type_choices %}
+                        <details class="table-head-menu">
+                            <summary class="table-head-menu__summary">
+                                <span>Событие</span>
+                                <span class="table-head-menu__icon">▾</span>
+                            </summary>
+                            <div class="table-head-menu__dropdown">
+                                {% for key, value in event_type_choices %}
+                                    <label class="table-head-menu__check">
+                                        <input
+                                            type="checkbox"
+                                            name="event_type"
+                                            value="{{ key }}"
+                                            {% if key in selected_event_types %}checked{% endif %}
+                                            onchange="this.form.submit()"
+                                        >
+                                        <span>{{ value }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </details>
+                    {% else %}
+                        <span>Событие</span>
+                    {% endif %}
+                </th>
+
+                <th>
+                    {% if next_ordering %}
+                        <details class="table-head-menu">
+                            <summary class="table-head-menu__summary">
+                                <span>Дата и время</span>
+                                <span class="table-head-menu__icon">↕</span>
+                            </summary>
+                            <div class="table-head-menu__dropdown">
+                                <label class="table-head-menu__radio">
+                                    <input
+                                        type="radio"
+                                        name="ordering"
+                                        value="-event_datetime"
+                                        {% if current_ordering == "-event_datetime" %}checked{% endif %}
+                                        onchange="this.form.submit()"
+                                    >
+                                    <span>Сначала новые</span>
+                                </label>
+
+                                <label class="table-head-menu__radio">
+                                    <input
+                                        type="radio"
+                                        name="ordering"
+                                        value="event_datetime"
+                                        {% if current_ordering == "event_datetime" %}checked{% endif %}
+                                        onchange="this.form.submit()"
+                                    >
+                                    <span>Сначала старые</span>
+                                </label>
+                            </div>
+                        </details>
+                    {% else %}
+                        <span>Дата и время</span>
+                    {% endif %}
+                </th>
+
+                <th>Комментарий</th>
+                <th>Подробнее</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% if event_rows %}
+                {% for row in event_rows %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'pets:pet_detail' pk=row.event.pet.pk %}">
+                                {{ row.event.pet.name }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{% url 'pets:event_detail' pk=row.event.pk %}">
+                                {{ row.event.get_event_type_display }}
+                            </a>
+                        </td>
+                        <td>{{ row.event.event_datetime|date:"d.m.Y H:i" }}</td>
+                        <td>{{ row.event_comment_display|linebreaksbr }}</td>
+                        <td>
+                            <a href="{% url 'pets:event_detail' pk=row.event.pk %}" class="btn-ui btn-ui--ghost btn-ui--sm">
+                                Подробнее
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" class="table-empty-cell">
+                        Событий по выбранным фильтрам нет.
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<div class="event-list d-md-none">
+    {% if event_rows %}
+        {% for row in event_rows %}
+            <article class="event-card">
+                <div class="event-card__top">
+                    <div>
+                        <div class="event-card__title">
+                            <a href="{% url 'pets:event_detail' pk=row.event.pk %}">
+                                {{ row.event.get_event_type_display }}
+                            </a>
+                        </div>
+                        <div class="event-card__meta">
+                            <a href="{% url 'pets:pet_detail' pk=row.event.pet.pk %}">
+                                {{ row.event.pet.name }}
+                            </a>
+                        </div>
+                    </div>
+                    <span class="badge-ui badge-ui--neutral">{{ row.event.event_datetime|date:"d.m.Y" }}</span>
+                </div>
+
+                <div class="text-soft mb-3">{{ row.event_comment_display|linebreaksbr }}</div>
+
+                <a href="{% url 'pets:event_detail' pk=row.event.pk %}" class="btn-ui btn-ui--ghost btn-ui--sm">
+                    Подробнее
+                </a>
+            </article>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state__title">Событий нет</div>
+            <div class="empty-state__text">
+                Измени фильтры или добавь событие.
+            </div>
+        </div>
+    {% endif %}
+</div>

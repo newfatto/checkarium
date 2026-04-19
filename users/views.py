@@ -3,6 +3,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, UpdateView
 
+from pets.services import build_pet_card_context, build_event_row_context
 from .forms import (
     CustomAuthenticationForm,
     CustomUserCreationForm,
@@ -61,6 +62,30 @@ class ProfileDetailView(LoginRequiredMixin, OnlyOwnerMixin, DetailView):
     template_name = "users/profile.html"
     context_object_name = "profile_user"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profile_user = self.get_object()
+
+        latest_pets = (
+            profile_user.pets.select_related("owner")
+            .prefetch_related("events")
+            .order_by("-created_at")[:6]
+        )
+        latest_events = (
+            profile_user.events.select_related("pet", "owner")
+            .order_by("-event_datetime")[:10]
+        )
+
+        context["profile_pet_cards"] = [
+            build_pet_card_context(pet, self.request.user)
+            for pet in latest_pets
+        ]
+        context["profile_event_rows"] = [
+            build_event_row_context(event)
+            for event in latest_events
+        ]
+        return context
+
 
 class ProfileUpdateView(LoginRequiredMixin, OnlyOwnerMixin, UpdateView):
     """Представление для редактирования профиля пользователя."""
@@ -86,3 +111,20 @@ class ProfileDeleteView(LoginRequiredMixin, OnlyOwnerMixin, DeleteView):
     template_name = "users/profile_confirm_delete.html"
     success_url = reverse_lazy("home")
     context_object_name = "profile_user"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profile_user = self.get_object()
+
+        latest_pets = profile_user.pets.select_related("owner").prefetch_related("events").all()[:6]
+        latest_events = profile_user.events.select_related("pet", "owner").all()[:10]
+
+        context["profile_pet_cards"] = [
+            build_pet_card_context(pet, self.request.user)
+            for pet in latest_pets
+        ]
+        context["profile_event_rows"] = [
+            build_event_row_context(event)
+            for event in latest_events
+        ]
+        return context

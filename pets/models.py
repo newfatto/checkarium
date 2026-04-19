@@ -112,6 +112,12 @@ class Pet(models.Model):
         verbose_name="Статус",
     )
 
+    is_public = models.BooleanField(
+        default=False,
+        verbose_name='Показывать питомца всем',
+        help_text='Если включено, карточка будет видна на главной странице и авторизованным пользователям'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -152,7 +158,7 @@ class Event(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="events",
-        verbose_name="Владелец"
+        verbose_name="Владелец",
     )
 
     pet = models.ForeignKey(
@@ -171,7 +177,7 @@ class Event(models.Model):
     title = models.CharField(
         max_length=150,
         blank=True,
-        verbose_name="Название события"
+        verbose_name="Название события",
     )
 
     event_datetime = models.DateTimeField(
@@ -186,19 +192,19 @@ class Event(models.Model):
     repeat_after_days = models.PositiveIntegerField(
         blank=True,
         null=True,
-        verbose_name="Повторить через (дней)"
+        verbose_name="Повторить через (дней)",
     )
 
     no_handling_days = models.PositiveIntegerField(
         blank=True,
         null=True,
-        verbose_name="Нельзя трогать (суток)"
+        verbose_name="Нельзя трогать (суток)",
     )
 
     weight_grams = models.PositiveIntegerField(
         blank=True,
         null=True,
-        verbose_name="Вес (г)"
+        verbose_name="Вес (г)",
     )
 
     length_cm = models.DecimalField(
@@ -206,20 +212,13 @@ class Event(models.Model):
         decimal_places=2,
         blank=True,
         null=True,
-        verbose_name="Длина (см)"
+        verbose_name="Длина (см)",
     )
 
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
-        """ Проверяет тип события:
-        Требует название для пользовательского события.
-        Требует при измерении указывать как минимум вес или длину.
-        Проверяет, что питомец принадлежит владельцу.
-        """
-
+        """Проверяет корректность данных события."""
         if self.event_type == self.EventType.CUSTOM and not self.title:
             raise ValidationError({
                 "title": "Для пользовательского события укажите название."
@@ -230,14 +229,17 @@ class Event(models.Model):
                 raise ValidationError("Для измерения укажите вес или длину.")
 
         if self.pet_id and self.owner_id and self.pet.owner_id != self.owner_id:
-            raise ValidationError({"pet": "Питомец должен принадлежать выбранному владельцу."})
+            raise ValidationError({
+                "pet": "Питомец должен принадлежать выбранному владельцу."
+            })
 
         if self.event_datetime and self.event_datetime > timezone.now():
-            raise ValidationError({"event_date": "Дата и время события не могут быть в будущем."})
-
+            raise ValidationError({
+                "event_datetime": "Дата и время события не могут быть в будущем."
+            })
 
     def save(self, *args, **kwargs):
-        """При сохранении измерения обновляем Pet."""
+        """При сохранении измерения обновляем параметры питомца."""
         self.full_clean()
         super().save(*args, **kwargs)
 

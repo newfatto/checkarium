@@ -10,6 +10,7 @@ class PetForm(forms.ModelForm):
         model = Pet
         fields = [
             "name",
+            "is_public",
             "animal_type",
             "species_name",
             "morph",
@@ -19,9 +20,9 @@ class PetForm(forms.ModelForm):
             "weight_grams",
             "length_cm",
             "photo",
+
             "feeding_notes",
             "notes",
-            "status",
         ]
         labels = {
             "name": "Имя",
@@ -34,9 +35,12 @@ class PetForm(forms.ModelForm):
             "weight_grams": "Вес (г)",
             "length_cm": "Длина (см)",
             "photo": "Фото",
+            "is_public": "Показывать питомца всем",
             "feeding_notes": "Чем кормить",
             "notes": "Заметки",
-            "status": "Статус",
+        }
+        help_texts = {
+            "is_public": "Если включено, питомец будет показан на главной странице и авторизованным пользователям.",
         }
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control"}),
@@ -52,17 +56,28 @@ class PetForm(forms.ModelForm):
                 format="%Y-%m-%d",
                 attrs={"type": "date", "class": "form-control"},
             ),
-            "weight_grams": forms.NumberInput(attrs={"class": "form-control", "placeholder": "Вес в граммах"}),
-            "length_cm": forms.NumberInput(attrs={"class": "form-control","placeholder": "Длина в сантиметрах"}),
+            "weight_grams": forms.NumberInput(
+                attrs={"class": "form-control", "placeholder": "Вес в граммах"}
+            ),
+            "length_cm": forms.NumberInput(
+                attrs={"class": "form-control", "placeholder": "Длина в сантиметрах", "step": "0.1"}
+            ),
             "photo": forms.ClearableFileInput(attrs={"class": "form-control"}),
-            "feeding_notes": forms.Textarea(attrs={
-                "class": "form-control",
-                "rows": 3,
-                "placeholder": "Например: мыши, крысята, сверчки"
-            }),
+            "is_public": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "feeding_notes": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "Например: мыши, крысята, сверчки",
+                }
+            ),
             "notes": forms.Textarea(attrs={"class": "form-control", "rows": 5}),
-            "status": forms.Select(attrs={"class": "form-select"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["birth_date"].input_formats = ["%Y-%m-%d"]
+        self.fields["acquired_date"].input_formats = ["%Y-%m-%d"]
 
 
 # ---------------- BASE EVENT ----------------
@@ -97,11 +112,16 @@ class BaseEventForm(forms.ModelForm):
             "event_type": forms.Select(attrs={"class": "form-select"}),
             "title": forms.TextInput(attrs={"class": "form-control"}),
             "event_datetime": forms.DateTimeInput(
-                attrs={"type": "datetime-local", "class": "form-control"}
+                attrs={"type": "datetime-local", "class": "form-control"},
+                format="%Y-%m-%dT%H:%M",
             ),
             "comment": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-            "repeat_after_days": forms.NumberInput(attrs={"class": "form-control", "placeholder": "Например: 7"}),
-            "no_handling_days": forms.NumberInput(attrs={"class": "form-control", "placeholder": "Например: 2"}),
+            "repeat_after_days": forms.NumberInput(
+                attrs={"class": "form-control", "placeholder": "Например: 7"}
+            ),
+            "no_handling_days": forms.NumberInput(
+                attrs={"class": "form-control", "placeholder": "Например: 2"}
+            ),
             "weight_grams": forms.NumberInput(attrs={"class": "form-control"}),
             "length_cm": forms.NumberInput(attrs={"class": "form-control", "step": "0.1"}),
         }
@@ -122,14 +142,15 @@ class BaseEventForm(forms.ModelForm):
 # ---------------- SPECIFIC FORMS ----------------
 
 class FeedingEventForm(BaseEventForm):
+    """ Форма для создания события 'Кормление' """
     class Meta(BaseEventForm.Meta):
         fields = [
             "pet",
             "event_type",
             "event_datetime",
-            "comment",
             "no_handling_days",
             "repeat_after_days",
+            "comment",
         ]
         help_texts = {
             "no_handling_days": "Сколько дней нельзя брать животное после кормления",
@@ -138,13 +159,14 @@ class FeedingEventForm(BaseEventForm):
 
 
 class SheddingEventForm(BaseEventForm):
+    """ Форма для создания события 'Линька' """
     class Meta(BaseEventForm.Meta):
         fields = [
             "pet",
             "event_type",
             "event_datetime",
-            "comment",
             "no_handling_days",
+            "comment",
         ]
         help_texts = {
             "no_handling_days": "Сколько дней нельзя трогать",
@@ -157,8 +179,8 @@ class CleaningEventForm(BaseEventForm):
             "pet",
             "event_type",
             "event_datetime",
-            "comment",
             "repeat_after_days",
+            "comment",
         ]
         help_texts = {
             "repeat_after_days": "Через сколько дней нужна следующая уборка",
@@ -188,8 +210,11 @@ class CustomEventForm(BaseEventForm):
             "event_type",
             "title",
             "event_datetime",
-            "comment",
             "repeat_after_days",
             "no_handling_days",
-
+            "comment",
         ]
+        help_texts = {
+            "repeat_after_days": "Если поле не нужно — можно оставить пустым.",
+            "no_handling_days": "Если поле не нужно — можно оставить пустым.",
+        }
