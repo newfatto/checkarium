@@ -2,6 +2,17 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, UpdateView
+from django.contrib import messages
+from django.core.exceptions import PermissionDenied
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import get_object_or_404, redirect
+from django.views import View
+
+from .services import (
+    create_telegram_deep_link_for_user,
+    disable_care_notifications,
+    enable_care_notifications,
+)
 
 from pets.services import build_pet_card_context, build_event_row_context
 from .forms import (
@@ -128,3 +139,53 @@ class ProfileDeleteView(LoginRequiredMixin, OnlyOwnerMixin, DeleteView):
             for event in latest_events
         ]
         return context
+
+
+class TelegramConnectView(LoginRequiredMixin, View):
+    """Создаёт deep link для привязки Telegram и перенаправляет пользователя в бота."""
+
+    def get(self, request: HttpRequest, pk: int) -> HttpResponse:
+        user = get_object_or_404(CustomUser, pk=pk)
+
+        if request.user != user:
+            raise PermissionDenied
+
+        if user.telegram_id:
+            enable_care_notifications(user)
+            messages.success(request, "Уведомления об уходе включены.")
+            return redirect("users:profile_detail", pk=user.pk)
+
+        deep_link = create_telegram_deep_link_for_user(user)
+        return redirect(deep_link)
+
+
+class TelegramDisableView(LoginRequiredMixin, View):
+    """Выключает уведомления об уходе."""
+
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
+        user = get_object_or_404(CustomUser, pk=pk)
+
+        if request.user != user:
+            raise PermissionDenied
+
+        disable_care_notifications(user)
+        messages.success(request, "Уведомления об уходе выключены.")
+        return redirect("users:profile_detail", pk=user.pk)
+
+
+class TelegramEnableView(LoginRequiredMixin, View):
+    """Включает уведомления об уходе для уже привязанного Telegram."""
+
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
+        user = get_object_or_404(CustomUser, pk=pk)
+
+        if request.user != user:
+            raise PermissionDenied
+
+        if not user.telegram_id:
+            messages.error(request, "Сначала подключите Telegram через бота.")
+            return redirect("users:profile_detail", pk=user.pk)
+
+        enable_care_notifications(user)
+        messages.success(request, "Уведомления об уходе включены.")
+        return redirect("users:profile_detail", pk=user.pk)

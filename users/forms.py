@@ -3,6 +3,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
 from .models import CustomUser
 
+from users.constants import TIME_ZONE_CHOICES
 
 class CustomUserCreationForm(UserCreationForm):
     """Форма регистрации пользователя."""
@@ -70,6 +71,14 @@ class CustomAuthenticationForm(AuthenticationForm):
 class CustomUserUpdateForm(forms.ModelForm):
     """Форма редактирования профиля пользователя."""
 
+    time_zone = forms.ChoiceField(
+        choices=TIME_ZONE_CHOICES,
+        label="Часовой пояс",
+        widget=forms.Select(attrs={"class": "form-control-ui"}),
+        help_text="Например: UTC+3 для Москвы, UTC+2 для Нидерландов зимой.",
+    )
+
+
     class Meta:
         model = CustomUser
         fields = (
@@ -78,6 +87,7 @@ class CustomUserUpdateForm(forms.ModelForm):
             "last_name",
             "city",
             "phone_number",
+            "time_zone",
             "avatar",
             "bio",
         )
@@ -119,7 +129,9 @@ class CustomUserUpdateForm(forms.ModelForm):
                     "class": "form-textarea-ui",
                 }
             ),
+
         }
+
 
     def __init__(self, *args, **kwargs) -> None:
         """Настроить отображение полей формы."""
