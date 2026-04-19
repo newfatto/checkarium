@@ -193,6 +193,7 @@ class MeasurementEventForm(BaseEventForm):
             "pet",
             "event_type",
             "event_datetime",
+            "repeat_after_days",
             "weight_grams",
             "length_cm",
             "comment",
