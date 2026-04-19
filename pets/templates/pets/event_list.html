@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}События | Checkarium{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__content">
+        <h1 class="page-title">События ухода</h1>
+        <p class="text-soft">
+            Таблица событий с фильтрацией и сортировкой.
+        </p>
+    </div>
+
+    <div class="page-header__actions">
+        <a href="{% url 'pets:event_create' event_type='shedding' %}" class="btn-ui btn-ui--secondary">
+            Линька
+        </a>
+        <a href="{% url 'pets:event_create' event_type='feeding' %}" class="btn-ui btn-ui--primary">
+            Кормление
+        </a>
+        <a href="{% url 'pets:event_create' event_type='cleaning' %}" class="btn-ui btn-ui--secondary">
+            Уборка
+        </a>
+        <a href="{% url 'pets:event_create' event_type='measurement' %}" class="btn-ui btn-ui--ghost">
+            Измерение
+        </a>
+        <a href="{% url 'pets:event_create' event_type='custom' %}" class="btn-ui btn-ui--ghost">
+            Своё событие
+        </a>
+    </div>
+</section>
+
+<section class="card-ui">
+    <form method="get" class="table-toolbar">
+        <div class="table-toolbar__filters">
+            <select name="pet" class="form-select-ui" style="min-width: 220px;">
+                <option value="">Все питомцы</option>
+                {% for item in request.user.pets.all %}
+                    <option value="{{ item.pk }}" {% if request.GET.pet == item.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ item.name }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <select name="event_type" class="form-select-ui" style="min-width: 220px;">
+                <option value="">Все типы</option>
+                {% for key, value in view.model.EventType.choices %}
+                    <option value="{{ key }}" {% if request.GET.event_type == key %}selected{% endif %}>
+                        {{ value }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <select name="ordering" class="form-select-ui" style="min-width: 220px;">
+                <option value="-event_datetime" {% if request.GET.ordering == "-event_datetime" or not request.GET.ordering %}selected{% endif %}>
+                    Сначала новые
+                </option>
+                <option value="event_datetime" {% if request.GET.ordering == "event_datetime" %}selected{% endif %}>
+                    Сначала старые
+                </option>
+            </select>
+        </div>
+
+        <div class="table-toolbar__actions">
+            <button type="submit" class="btn-ui btn-ui--primary">Применить</button>
+            <a href="{% url 'pets:event_list' %}" class="btn-ui btn-ui--ghost">Сбросить</a>
+        </div>
+    </form>
+
+    {% if events %}
+        <div class="table-wrap d-none d-md-block">
+            <table class="table-ui">
+                <thead>
+                    <tr>
+                        <th>Питомец</th>
+                        <th>Событие</th>
+                        <th>Дата и время</th>
+                        <th>Комментарий</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                        <tr>
+                            <td>{{ event.pet.name }}</td>
+                            <td>{{ event.get_event_type_display }}</td>
+                            <td>{{ event.event_datetime|date:"d.m.Y H:i" }}</td>
+                            <td>{{ event.comment|default:"—"|truncatechars:70 }}</td>
+                            <td>
+                                <a href="{% url 'pets:event_detail' pk=event.pk %}" class="btn-ui btn-ui--ghost btn-ui--sm">
+                                    Подробнее
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="event-list d-md-none">
+            {% for event in events %}
+                <article class="event-card">
+                    <div class="event-card__top">
+                        <div>
+                            <div class="event-card__title">{{ event.get_event_type_display }}</div>
+                            <div class="event-card__meta">{{ event.pet.name }}</div>
+                        </div>
+                        <span class="badge-ui badge-ui--neutral">{{ event.event_datetime|date:"d.m.Y" }}</span>
+                    </div>
+
+                    <div class="text-soft mb-3">{{ event.comment|default:"Без комментария"|truncatechars:90 }}</div>
+
+                    <a href="{% url 'pets:event_detail' pk=event.pk %}" class="btn-ui btn-ui--ghost btn-ui--sm">
+                        Подробнее
+                    </a>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state__title">Событий пока нет</div>
+            <div class="empty-state__text">
+                Добавьте первое событие ухода, чтобы видеть историю действий.
+            </div>
+            <a href="{% url 'pets:event_create' event_type='custom' %}" class="btn-ui btn-ui--primary">
+                Добавить событие
+            </a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

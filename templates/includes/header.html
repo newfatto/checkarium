@@ -26,6 +26,18 @@
 
                 {% if user.is_authenticated %}
                     <li class="nav-item">
+                        <a class="nav-link nav-link-ui" href="{% url 'pets:pet_list' %}">
+                            Питомцы
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-ui" href="{% url 'pets:event_list' %}">
+                            События
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
                         <a
                             class="nav-link nav-link-ui"
                             href="{% url 'users:profile_detail' pk=user.pk %}"

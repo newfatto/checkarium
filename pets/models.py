@@ -81,9 +81,7 @@ class Pet(models.Model):
         null=True,
         verbose_name="Вес (г)",
     )
-    length_cm = models.DecimalField(
-        max_digits=6,
-        decimal_places=2,
+    length_cm = models.PositiveIntegerField(
         blank=True,
         null=True,
         verbose_name="Длина (см)",
@@ -234,7 +232,7 @@ class Event(models.Model):
         if self.pet_id and self.owner_id and self.pet.owner_id != self.owner_id:
             raise ValidationError({"pet": "Питомец должен принадлежать выбранному владельцу."})
 
-        if self.event_date and self.event_date > timezone.now():
+        if self.event_datetime and self.event_datetime > timezone.now():
             raise ValidationError({"event_date": "Дата и время события не могут быть в будущем."})
 
 

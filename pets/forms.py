@@ -44,17 +44,23 @@ class PetForm(forms.ModelForm):
             "species_name": forms.TextInput(attrs={"class": "form-control"}),
             "morph": forms.TextInput(attrs={"class": "form-control"}),
             "sex": forms.Select(attrs={"class": "form-select"}),
-            "birth_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-            "acquired_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-            "weight_grams": forms.NumberInput(attrs={"class": "form-control", "placeholder": "Например: 120"}),
-            "length_cm": forms.NumberInput(attrs={"class": "form-control", "step": "0.1"}),
+            "birth_date": forms.DateInput(
+                format="%Y-%m-%d",
+                attrs={"type": "date", "class": "form-control"},
+            ),
+            "acquired_date": forms.DateInput(
+                format="%Y-%m-%d",
+                attrs={"type": "date", "class": "form-control"},
+            ),
+            "weight_grams": forms.NumberInput(attrs={"class": "form-control", "placeholder": "Вес в граммах"}),
+            "length_cm": forms.NumberInput(attrs={"class": "form-control","placeholder": "Длина в сантиметрах"}),
             "photo": forms.ClearableFileInput(attrs={"class": "form-control"}),
             "feeding_notes": forms.Textarea(attrs={
                 "class": "form-control",
                 "rows": 3,
                 "placeholder": "Например: мыши, крысята, сверчки"
             }),
-            "notes": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "notes": forms.Textarea(attrs={"class": "form-control", "rows": 5}),
             "status": forms.Select(attrs={"class": "form-select"}),
         }
 
@@ -185,6 +191,5 @@ class CustomEventForm(BaseEventForm):
             "comment",
             "repeat_after_days",
             "no_handling_days",
-            "weight_grams",
-            "length_cm",
+
         ]

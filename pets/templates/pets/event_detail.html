@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Событие | Checkarium{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__content">
+        <h1 class="page-title">
+            {{ event.title|default:event.get_event_type_display }}
+        </h1>
+        <p class="text-soft">
+            {{ event.pet.name }} • {{ event.event_datetime|date:"d.m.Y H:i" }}
+        </p>
+    </div>
+
+    <div class="page-header__actions">
+        <a href="{% url 'pets:event_update' pk=event.pk %}" class="btn-ui btn-ui--primary">Редактировать</a>
+        <a href="{% url 'pets:event_delete' pk=event.pk %}" class="btn-ui btn-ui--danger">Удалить</a>
+    </div>
+</section>
+
+<section class="card-ui mb-4">
+    <div class="d-flex flex-column gap-3">
+        <div><strong>Питомец:</strong> <a href="{% url 'pets:pet_detail' pk=event.pet.pk %}">{{ event.pet.name }}</a></div>
+        <div><strong>Тип события:</strong> {{ event.get_event_type_display }}</div>
+        <div><strong>Дата и время:</strong> {{ event.event_datetime|date:"d.m.Y H:i" }}</div>
+
+        {% if event.repeat_after_days %}
+            <div><strong>Повторить через:</strong> {{ event.repeat_after_days }} дн.</div>
+        {% endif %}
+
+        {% if event.no_handling_days %}
+            <div><strong>Нельзя трогать:</strong> {{ event.no_handling_days }} дн.</div>
+        {% endif %}
+
+        {% if event.weight_grams %}
+            <div><strong>Вес:</strong> {{ event.weight_grams }} г</div>
+        {% endif %}
+
+        {% if event.length_cm %}
+            <div><strong>Длина:</strong> {{ event.length_cm }} см</div>
+        {% endif %}
+
+        <div><strong>Комментарий:</strong></div>
+        <div class="text-soft">
+            {{ event.comment|default:"Комментарий не указан"|linebreaksbr }}
+        </div>
+    </div>
+</section>
+{% endblock %}

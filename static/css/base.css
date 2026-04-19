@@ -282,6 +282,16 @@ img {
   flex-wrap: wrap;
 }
 
+.pet-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.pet-card-link:hover {
+  transform: translateY(-2px);
+}
+
 /* Сетка карточек питомцев */
 .pet-grid {
   display: grid;
@@ -450,6 +460,16 @@ img {
 /* Поля формы */
 .form-group {
   margin-bottom: var(--space-5);
+}
+
+.form-group--full {
+  grid-column: 1 / -1;
+}
+
+.form-group--full textarea,
+.form-group--full input,
+.form-group--full select {
+  width: 100%;
 }
 
 .form-label-ui {

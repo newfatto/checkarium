@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Удаление питомца | Checkarium{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__content">
+        <h1 class="page-title">Удаление питомца</h1>
+        <p class="text-soft">Это действие нельзя будет отменить.</p>
+    </div>
+</section>
+
+<section class="form-card mx-auto" style="max-width: 640px;">
+    <p class="mb-4">
+        Вы действительно хотите удалить питомца <strong>{{ object.name }}</strong>?
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="d-flex gap-3 flex-wrap">
+            <button type="submit" class="btn-ui btn-ui--danger">Удалить питомца</button>
+            <a href="{% url 'pets:pet_detail' pk=object.pk %}" class="btn-ui btn-ui--ghost">Отмена</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

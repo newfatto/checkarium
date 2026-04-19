@@ -12,6 +12,7 @@ from .forms import (
     SheddingEventForm,
 )
 from .models import Event, Pet
+from .services import get_pet_age_display
 
 
 class ModeratorAccessMixin:
@@ -46,10 +47,15 @@ class PetListView(LoginRequiredMixin, OwnerOrModeratorQuerysetMixin, ListView):
     context_object_name = "pets"
 
 
-class PetDetailView(LoginRequiredMixin, OwnerOrModeratorObjectMixin, DetailView):
+class PetDetailView(LoginRequiredMixin, DetailView):
     model = Pet
     template_name = "pets/pet_detail.html"
     context_object_name = "pet"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["pet_age_display"] = get_pet_age_display(self.object.birth_date)
+        return context
 
 
 class PetCreateView(LoginRequiredMixin, CreateView):
