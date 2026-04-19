@@ -109,6 +109,12 @@ class CustomUser(AbstractUser):
         help_text="Заполняется автоматически через Telegram-бота.",
     )
 
+    care_notifications_enabled = models.BooleanField(
+        default=False,
+        verbose_name="Уведомления об уходе",
+        help_text="Получать ежедневные уведомления в Telegram.",
+    )
+
     time_zone = models.CharField(
         max_length=64,
         default="UTC",
