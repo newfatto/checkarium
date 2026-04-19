@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}События | Checkarium{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__content">
+        <h1 class="page-title">События ухода</h1>
+        <p class="text-soft">
+            Таблица событий с фильтрацией и сортировкой.
+        </p>
+    </div>
+
+    <div class="page-header__actions">
+        <a href="{% url 'pets:event_create' event_type='shedding' %}" class="btn-ui btn-ui--secondary">
+            Линька
+        </a>
+        <a href="{% url 'pets:event_create' event_type='feeding' %}" class="btn-ui btn-ui--primary">
+            Кормление
+        </a>
+        <a href="{% url 'pets:event_create' event_type='cleaning' %}" class="btn-ui btn-ui--secondary">
+            Уборка
+        </a>
+        <a href="{% url 'pets:event_create' event_type='measurement' %}" class="btn-ui btn-ui--ghost">
+            Измерение
+        </a>
+        <a href="{% url 'pets:event_create' event_type='custom' %}" class="btn-ui btn-ui--ghost">
+            Своё событие
+        </a>
+    </div>
+</section>
+
+<section class="card-ui card-ui--events">
+    <form method="get" id="eventFilterForm">
+        {% include 'pets/includes/events_table.html' with event_rows=event_rows filter_pets=filter_pets selected_pet_ids=selected_pet_ids selected_event_types=selected_event_types next_ordering=next_ordering current_ordering=current_ordering event_type_choices=view.model.EventType.choices %}
+    </form>
+</section>
+{% endblock %}

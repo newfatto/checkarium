@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Редактирование события{% else %}Новое событие{% endif %} | Checkarium
+{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__content">
+        <h1 class="page-title">
+            {% if object %}
+                Редактирование события
+            {% else %}
+                {% if view.event_type == 'feeding' %}
+                    Новое кормление
+                {% elif view.event_type == 'shedding' %}
+                    Новая линька
+                {% elif view.event_type == 'cleaning' %}
+                    Новая уборка
+                {% elif view.event_type == 'measurement' %}
+                    Новое измерение
+                {% else %}
+                    Новое событие
+                {% endif %}
+            {% endif %}
+        </h1>
+        <p class="text-soft">
+            Заполните данные события ухода.
+        </p>
+    </div>
+</section>
+
+<section class="form-card mx-auto">
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+                <div class="alert-ui alert-ui--danger">{{ error }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="form-grid form-grid--2">
+            {% for field in form %}
+                <div class="form-group {% if field.name == 'comment' or field.name == 'title' %}w-100{% endif %}">
+                    <label class="form-label-ui" for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <div class="form-help">{{ field.help_text }}</div>
+                    {% endif %}
+
+                    {% for error in field.errors %}
+                        <div class="form-error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4 d-flex gap-3 flex-wrap">
+            <button type="submit" class="btn-ui btn-ui--primary">
+                {% if object %}Сохранить{% else %}Создать событие{% endif %}
+            </button>
+
+            {% if object %}
+                <a href="{% url 'pets:event_detail' pk=object.pk %}" class="btn-ui btn-ui--ghost">Отмена</a>
+            {% else %}
+                <a href="{% url 'pets:event_list' %}" class="btn-ui btn-ui--ghost">Отмена</a>
+            {% endif %}
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ pet.name }} | Checkarium{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__content">
+        <h1 class="page-title">{{ pet.name }}</h1>
+        <p class="text-soft">
+            {{ pet.get_animal_type_display }} • {{ pet.species_name }}
+        </p>
+    </div>
+
+    {% if can_edit_pet %}
+    <div class="page-header__actions">
+        <a href="{% url 'pets:pet_update' pk=pet.pk %}" class="btn-ui btn-ui--primary">Редактировать</a>
+        <a href="{% url 'pets:pet_delete' pk=pet.pk %}" class="btn-ui btn-ui--danger">Удалить</a>
+    </div>
+    {% endif %}
+</section>
+
+<section class="card-ui mb-4">
+    <div class="d-flex flex-column flex-lg-row gap-4">
+        <div style="max-width: 360px; width: 100%;">
+            <div class="pet-card__image-wrap rounded-4">
+                {% if pet.photo %}
+                <img
+                        src="{{ pet.photo.url }}"
+                        alt="{{ pet.name }}"
+                        class="pet-card__image"
+                >
+                {% else %}
+                <div class="h-100 d-flex align-items-center justify-content-center text-soft">
+                    Нет фото
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="flex-grow-1">
+            <div class="pet-card__stats mb-4">
+                <span class="metric-chip">Пол: {{ pet.get_sex_display }}</span>
+
+                {% if pet_age_display %}
+                <span class="metric-chip">Возраст: {{ pet_age_display }}</span>
+                {% endif %}
+
+                {% if pet.weight_grams %}
+                <span class="metric-chip">{{ pet.weight_grams }} г</span>
+                {% endif %}
+
+                {% if pet.length_cm %}
+                <span class="metric-chip">{{ pet.length_cm|floatformat:0 }} см</span>
+                {% endif %}
+
+                {% if is_owner %}
+                {% if is_in_shedding %}
+                <span class="badge-ui badge-ui--warning">В линьке</span>
+                {% endif %}
+
+                {% if can_handle %}
+                <span class="badge-ui badge-ui--success">Можно трогать</span>
+                {% else %}
+                <span class="badge-ui badge-ui--danger">Нельзя трогать</span>
+                {% endif %}
+                {% endif %}
+            </div>
+
+            <div class="d-flex flex-column gap-2">
+                <div><strong>Вид:</strong> {{ pet.species_name }}</div>
+                <div><strong>Морфа / окрас:</strong> {{ pet.morph|default:"—" }}</div>
+                <div>
+                    <strong>Дата рождения:</strong>
+                    {{ pet.birth_date|date:"d.m.Y"|default:"—" }}
+                    {% if pet_age_display %}({{ pet_age_display }}){% endif %}
+                </div>
+
+                {% if is_owner %}
+                <div><strong>Дата появления у вас:</strong> {{ pet.acquired_date|date:"d.m.Y"|default:"—" }}</div>
+                {% else %}
+                <div><strong>Дата появления у владельца:</strong> {{ pet.acquired_date|date:"d.m.Y"|default:"—" }}</div>
+                <div><strong>Владелец:</strong> {{ owner_display }}</div>
+                {% endif %}
+
+                {% if pet.feeding_notes %}
+                <div><strong>Рацион:</strong> {{ pet.feeding_notes|linebreaksbr }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{% if is_owner or can_edit_pet %}
+{% if pet.notes %}
+<section class="card-ui mb-4">
+    <h2 class="section-title mb-3">Комментарий</h2>
+    <p class="mb-0">{{ pet.notes|linebreaksbr }}</p>
+</section>
+{% endif %}
+
+<section class="card-ui mb-4">
+    <h2 class="section-title mb-3">Ближайшие события</h2>
+
+    {% if upcoming_tasks %}
+    <ul class="mb-0 ps-3">
+        {% for task in upcoming_tasks %}
+        <li>{{ task }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="mb-0 text-soft">Запланированных событий пока нет.</p>
+    {% endif %}
+</section>
+
+<section class="card-ui mb-4">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+        <div>
+            <h2 class="section-title mb-2">Добавить событие</h2>
+            <p class="text-soft mb-0">Быстрое создание записей ухода для этого животного.</p>
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-3">
+        <a href="{% url 'pets:event_create' event_type='feeding' %}?pet={{ pet.pk }}" class="btn-ui btn-ui--primary">Кормление</a>
+        <a href="{% url 'pets:event_create' event_type='shedding' %}?pet={{ pet.pk }}" class="btn-ui btn-ui--secondary">Линька</a>
+        <a href="{% url 'pets:event_create' event_type='cleaning' %}?pet={{ pet.pk }}" class="btn-ui btn-ui--secondary">Уборка</a>
+        <a href="{% url 'pets:event_create' event_type='measurement' %}?pet={{ pet.pk }}" class="btn-ui btn-ui--ghost">Измерение</a>
+        <a href="{% url 'pets:event_create' event_type='custom' %}?pet={{ pet.pk }}" class="btn-ui btn-ui--ghost">Своё
+            событие</a>
+    </div>
+</section>
+
+<section class="card-ui">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+        <div>
+            <h2 class="section-title mb-2">Последние события</h2>
+            <p class="text-soft mb-0">История ухода по этому питомцу.</p>
+        </div>
+        <a href="{% url 'pets:event_list' %}?pet={{ pet.pk }}" class="btn-ui btn-ui--ghost">
+            Все события
+        </a>
+    </div>
+
+    {% if pet.events.all %}
+    <div class="table-wrap">
+        <table class="table-ui">
+            <thead>
+            <tr>
+                <th>Тип</th>
+                <th>Дата</th>
+                <th>Комментарий</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for event in pet.events.all|slice:":6" %}
+            <tr>
+                <td>{{ event.get_event_type_display }}</td>
+                <td>{{ event.event_datetime|date:"d.m.Y H:i" }}</td>
+                <td>{{ event.comment|default:"—"|truncatechars:80 }}</td>
+                <td>
+                    <a href="{% url 'pets:event_detail' pk=event.pk %}" class="btn-ui btn-ui--ghost btn-ui--sm">
+                        Подробнее
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state__title">Событий пока нет</div>
+        <div class="empty-state__text">
+            Добавьте первое событие ухода для этого питомца.
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+
+{% endblock %}
+

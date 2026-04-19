@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Питомцы | Checkarium{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__content">
+        <h1 class="page-title">Питомцы</h1>
+        <p class="text-soft">Ваши питомцы и карточки животных.</p>
+    </div>
+
+    <div class="page-header__actions">
+        <a href="{% url 'pets:pet_create' %}" class="btn-ui btn-ui--primary">
+            Добавить питомца
+        </a>
+    </div>
+</section>
+
+{% if pet_cards %}
+    {% include 'pets/includes/pet_cards_grid.html' with pet_cards=pet_cards %}
+{% else %}
+    <section class="empty-state">
+        <div class="empty-state__title">Питомцев пока нет</div>
+        <div class="empty-state__text">
+            Добавьте первого питомца, чтобы хранить информацию о нём и событиях ухода.
+        </div>
+        <a href="{% url 'pets:pet_create' %}" class="btn-ui btn-ui--primary">
+            Добавить питомца
+        </a>
+    </section>
+{% endif %}
+{% endblock %}

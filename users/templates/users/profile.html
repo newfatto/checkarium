@@ -45,11 +45,10 @@
                         Пользователь
                         {% endif %}
                     </h2>
-                    <p class="text-soft mb-0">
-                        Основная информация профиля.
-                    </p>
+                    <p class="text-soft mb-0">Основная информация профиля.</p>
                 </div>
 
+                {% if request.user == profile_user %}
                 <div class="d-flex flex-column flex-sm-row gap-3">
                     <a
                             href="{% url 'users:profile_update' pk=profile_user.pk %}"
@@ -65,6 +64,7 @@
                         Удалить профиль
                     </a>
                 </div>
+                {% endif %}
             </div>
 
             <div class="d-flex flex-column gap-2">
@@ -81,104 +81,71 @@
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
         <div>
             <h2 class="section-title mb-2">Мои питомцы</h2>
-            <p class="text-soft mb-0">
-                Пока это UI-заглушка до реализации приложения pets.
-            </p>
+            <p class="text-soft mb-0">Последние добавленные питомцы.</p>
         </div>
 
-        <a href="#" class="btn-ui btn-ui--primary">
-            Добавить питомца
-        </a>
+        {% if request.user == profile_user %}
+            <a href="{% url 'pets:pet_create' %}" class="btn-ui btn-ui--primary">
+                Добавить питомца
+            </a>
+        {% endif %}
     </div>
 
-    <div class="empty-state mb-4">
-        <div class="empty-state__title">Питомцев пока нет</div>
-        <div class="empty-state__text">
-            Здесь будет отображаться список ваших питомцев после подключения приложения pets.
+    {% if profile_pet_cards %}
+        {% include 'pets/includes/pet_cards_grid.html' with pet_cards=profile_pet_cards %}
+        <div class="mt-4">
+            <a href="{% url 'pets:pet_list' %}" class="btn-ui btn-ui--ghost">Смотреть всех питомцев</a>
         </div>
-        <a href="#" class="btn-ui btn-ui--ghost">Добавить первого питомца</a>
-    </div>
-
-    <div class="pet-grid">
-        <article class="pet-card">
-            <div class="pet-card__image-wrap"></div>
-
-            <div class="pet-card__body">
-                <h3 class="pet-card__title">Маисовый полоз</h3>
-                <div class="pet-card__meta">Самец • 2 года</div>
-
-                <div class="pet-card__stats">
-                    <span class="metric-chip">120 г</span>
-                    <span class="metric-chip">80 см</span>
-                </div>
-
-                <div class="pet-card__actions">
-                    <a href="#" class="btn-ui btn-ui--ghost btn-ui--sm">Подробнее</a>
-                </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state__title">Питомцев пока нет</div>
+            <div class="empty-state__text">
+                Добавьте первого питомца, чтобы вести карточки животных и события ухода.
             </div>
-        </article>
-
-        <article class="pet-card">
-            <div class="pet-card__image-wrap"></div>
-
-            <div class="pet-card__body">
-                <h3 class="pet-card__title">Бородатая агама</h3>
-                <div class="pet-card__meta">Самка • 1 год</div>
-
-                <div class="pet-card__stats">
-                    <span class="metric-chip">300 г</span>
-                    <span class="metric-chip">42 см</span>
-                </div>
-
-                <div class="pet-card__actions">
-                    <a href="#" class="btn-ui btn-ui--ghost btn-ui--sm">Подробнее</a>
-                </div>
-            </div>
-        </article>
-    </div>
+            {% if request.user == profile_user %}
+                <a href="{% url 'pets:pet_create' %}" class="btn-ui btn-ui--primary">Добавить питомца</a>
+            {% endif %}
+        </div>
+    {% endif %}
 </section>
 
 <section class="card-ui">
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
         <div>
-            <h2 class="section-title mb-2">Последние действия</h2>
-            <p class="text-soft mb-0">
-                Заглушка под будущую историю событий.
-            </p>
+            <h2 class="section-title mb-2">Последние события</h2>
+            <p class="text-soft mb-0">Последние 10 записей по уходу за питомцами.</p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-3">
+            {% if request.user == profile_user %}
+                <a href="{% url 'pets:event_create' event_type='shedding' %}" class="btn-ui btn-ui--secondary">Линька</a>
+                <a href="{% url 'pets:event_create' event_type='feeding' %}" class="btn-ui btn-ui--primary">Кормление</a>
+                <a href="{% url 'pets:event_create' event_type='cleaning' %}" class="btn-ui btn-ui--secondary">Уборка</a>
+                <a href="{% url 'pets:event_create' event_type='measurement' %}" class="btn-ui btn-ui--ghost">Измерение</a>
+                <a href="{% url 'pets:event_create' event_type='custom' %}" class="btn-ui btn-ui--ghost">Своё событие</a>
+                <a href="{% url 'pets:event_list' %}" class="btn-ui btn-ui--ghost">Все события</a>
+            {% endif %}
         </div>
     </div>
 
-    <div class="table-wrap">
-        <table class="table-ui">
-            <thead>
-            <tr>
-                <th>Питомец</th>
-                <th>Событие</th>
-                <th>Дата</th>
-                <th>Комментарий</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>Маисовый полоз</td>
-                <td>Кормление</td>
-                <td>12.04.2026</td>
-                <td>Съел мышь, активен.</td>
-            </tr>
-            <tr>
-                <td>Бородатая агама</td>
-                <td>Уборка</td>
-                <td>11.04.2026</td>
-                <td>Заменён субстрат.</td>
-            </tr>
-            <tr>
-                <td>Маисовый полоз</td>
-                <td>Измерение</td>
-                <td>09.04.2026</td>
-                <td>Вес и длина обновлены.</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+    {% if profile_event_rows %}
+        {% include 'pets/includes/events_table.html' with event_rows=profile_event_rows filter_pets=None selected_pet_ids=None selected_event_types=None next_ordering=None event_type_choices=None %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state__title">Событий пока нет</div>
+            <div class="empty-state__text">
+                Когда вы начнёте вести кормления, уборки, линьки и измерения, они появятся здесь.
+            </div>
+            {% if request.user == profile_user %}
+                <div class="d-flex flex-wrap gap-3 justify-content-center mt-4">
+                    <a href="{% url 'pets:event_create' event_type='shedding' %}" class="btn-ui btn-ui--secondary">Линька</a>
+                    <a href="{% url 'pets:event_create' event_type='feeding' %}" class="btn-ui btn-ui--primary">Кормление</a>
+                    <a href="{% url 'pets:event_create' event_type='cleaning' %}" class="btn-ui btn-ui--secondary">Уборка</a>
+                    <a href="{% url 'pets:event_create' event_type='measurement' %}" class="btn-ui btn-ui--ghost">Измерение</a>
+                    <a href="{% url 'pets:event_create' event_type='custom' %}" class="btn-ui btn-ui--ghost">Своё событие</a>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
 </section>
 {% endblock %}

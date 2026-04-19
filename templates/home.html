@@ -1,56 +1,96 @@
 {% extends 'base.html' %}
 
-{% block title %}Checkarium{% endblock %}
+{% block title %}Главная | Checkarium{% endblock %}
 
 {% block content %}
+
+<!-- Блок HERO -->
 <section class="page-header">
     <div class="page-header__content">
-        <h1 class="page-title">Checkarium</h1>
+        <h1 class="page-title">
+            Учёт и уход за террариумными животными — в одном месте
+        </h1>
+
         <p class="text-soft">
-            Удобный трекер ухода за рептилиями: питомцы, события, статусы и напоминания.
+            Checkarium помогает вести учёт террариумных животных:
+            сохранять информацию о питомцах, записывать события ухода,
+            планировать будущие действия и получать ежедневные уведомления в Telegram.
         </p>
     </div>
 
     <div class="page-header__actions">
-        <a href="#" class="btn-ui btn-ui--primary">Добавить питомца</a>
-        <a href="#" class="btn-ui btn-ui--ghost">Посмотреть события</a>
+        {% if user.is_authenticated %}
+        <a href="#" class="btn-ui btn-ui--primary">Мои питомцы</a>
+        <a href="#" class="btn-ui btn-ui--ghost">Добавить питомца</a>
+        {% else %}
+
+        {% endif %}
     </div>
 </section>
 
-<section class="status-panel status-panel--success">
-    <div class="status-panel__title">Сегодня всё спокойно</div>
-    <div class="status-panel__text">
-        На этой странице позже можно будет показывать сводку по питомцам и задачам на сегодня.
-    </div>
-</section>
+<!-- Блок "Что умеет Checkarium -->
 
-<section>
-    <h2 class="section-title">Пример карточки питомца</h2>
+<section class="mb-5">
+    <h2 class="section-title">Как работает Checkarium</h2>
 
-    <div class="pet-grid">
-        <article class="pet-card">
-            <div class="pet-card__image-wrap"></div>
+    <div class="features-grid">
+        <article class="card-ui feature-card">
+            <div class="feature-card__number">1</div>
 
-            <div class="pet-card__body">
-                <h3 class="pet-card__title">Маисовый полоз</h3>
-                <div class="pet-card__meta">Самец • 2 года</div>
+            <h3 class="feature-card__title">
+                Добавьте питомца
+            </h3>
 
-                <div class="pet-card__stats">
-                    <span class="metric-chip">120 г</span>
-                    <span class="metric-chip">80 см</span>
-                    <span class="metric-chip">Последнее кормление: 2 дня назад</span>
-                </div>
+            <ul class="feature-card__list">
+                <li>Ведите учёт своей коллекции</li>
+                <li>Храните информацию о каждом животном</li>
+                <li>Отслеживайте рост и вес</li>
+            </ul>
+        </article>
 
-                <div class="mb-3">
-                    <span class="badge-ui badge-ui--success">Можно брать на руки</span>
-                </div>
+        <article class="card-ui feature-card">
+            <div class="feature-card__number">2</div>
 
-                <div class="pet-card__actions">
-                    <a href="#" class="btn-ui btn-ui--primary btn-ui--sm">Открыть</a>
-                    <a href="#" class="btn-ui btn-ui--ghost btn-ui--sm">События</a>
-                </div>
-            </div>
+            <h3 class="feature-card__title">
+                Записывайте события
+            </h3>
+
+            <ul class="feature-card__list">
+                <li>Кормление, линька, измерения</li>
+                <li>Добавляйте свои события</li>
+                <li>Настраивайте повторения</li>
+            </ul>
+        </article>
+
+        <article class="card-ui feature-card">
+            <div class="feature-card__number">3</div>
+
+            <h3 class="feature-card__title">
+                Получайте напоминания
+            </h3>
+
+            <ul class="feature-card__list">
+                <li>Ежедневные уведомления</li>
+                <li>Контроль контакта с животным</li>
+                <li>Напоминания в Telegram</li>
+            </ul>
         </article>
     </div>
 </section>
+
+<h2 class="section-title">Питомцы пользователей</h2>
+<p class="text-soft">
+    Публичные карточки животных, которыми владельцы решили поделиться.
+</p>
+
+{% if public_pet_cards %}
+{% include 'pets/includes/pet_cards_grid.html' with pet_cards=public_pet_cards %}
+{% else %}
+<section class="empty-state">
+    <div class="empty-state__title">Пока нет публичных питомцев</div>
+    <div class="empty-state__text">
+        Когда пользователи включат показ своих животных, карточки появятся здесь.
+    </div>
+</section>
+{% endif %}
 {% endblock %}
