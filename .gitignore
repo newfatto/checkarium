@@ -217,3 +217,9 @@ __marimo__/
 poetry.toml
 
 media/
+media/*
+!media/demo/
+!media/demo/pets/
+!media/demo/users/
+!media/demo/pets/**
+!media/demo/users/**
