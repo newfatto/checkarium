@@ -6,7 +6,6 @@ from django.urls import reverse
 from .validators import validate_time_zone
 
 
-
 class CustomUserManager(BaseUserManager):
     """Менеджер для кастомной модели пользователя с авторизацией по email."""
 

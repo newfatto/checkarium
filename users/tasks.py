@@ -1,5 +1,4 @@
 from celery import shared_task
-from .timezone_services import get_user_local_now
 
 from .models import CustomUser
 from .services import (
@@ -7,6 +6,7 @@ from .services import (
     send_telegram_message,
     should_send_daily_notification_now,
 )
+from .timezone_services import get_user_local_now
 
 
 @shared_task

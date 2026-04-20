@@ -2,16 +2,16 @@ from django.urls import path
 
 from .apps import PetsConfig
 from .views import (
-    PetListView,
-    PetDetailView,
-    PetCreateView,
-    PetUpdateView,
-    PetDeleteView,
-    EventListView,
-    EventDetailView,
     EventCreateView,
-    EventUpdateView,
     EventDeleteView,
+    EventDetailView,
+    EventListView,
+    EventUpdateView,
+    PetCreateView,
+    PetDeleteView,
+    PetDetailView,
+    PetListView,
+    PetUpdateView,
 )
 
 app_name = PetsConfig.name
@@ -22,7 +22,6 @@ urlpatterns = [
     path("<int:pk>/", PetDetailView.as_view(), name="pet_detail"),
     path("<int:pk>/update/", PetUpdateView.as_view(), name="pet_update"),
     path("<int:pk>/delete/", PetDeleteView.as_view(), name="pet_delete"),
-
     path("events/", EventListView.as_view(), name="event_list"),
     path("events/create/<str:event_type>/", EventCreateView.as_view(), name="event_create"),
     path("events/<int:pk>/", EventDetailView.as_view(), name="event_detail"),

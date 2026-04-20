@@ -1,26 +1,26 @@
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView, LogoutView
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, UpdateView
-from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse_lazy
 from django.views import View
+from django.views.generic import CreateView, DeleteView, DetailView, UpdateView
 
-from .services import (
-    create_telegram_deep_link_for_user,
-    disable_care_notifications,
-    enable_care_notifications,
-)
+from pets.services import build_event_row_context, build_pet_card_context
 
-from pets.services import build_pet_card_context, build_event_row_context
 from .forms import (
     CustomAuthenticationForm,
     CustomUserCreationForm,
     CustomUserUpdateForm,
 )
 from .models import CustomUser
+from .services import (
+    create_telegram_deep_link_for_user,
+    disable_care_notifications,
+    enable_care_notifications,
+)
 
 
 class OnlyOwnerMixin(UserPassesTestMixin):
@@ -77,24 +77,11 @@ class ProfileDetailView(LoginRequiredMixin, OnlyOwnerMixin, DetailView):
         context = super().get_context_data(**kwargs)
         profile_user = self.get_object()
 
-        latest_pets = (
-            profile_user.pets.select_related("owner")
-            .prefetch_related("events")
-            .order_by("-created_at")[:6]
-        )
-        latest_events = (
-            profile_user.events.select_related("pet", "owner")
-            .order_by("-event_datetime")[:10]
-        )
+        latest_pets = profile_user.pets.select_related("owner").prefetch_related("events").order_by("-created_at")[:6]
+        latest_events = profile_user.events.select_related("pet", "owner").order_by("-event_datetime")[:10]
 
-        context["profile_pet_cards"] = [
-            build_pet_card_context(pet, self.request.user)
-            for pet in latest_pets
-        ]
-        context["profile_event_rows"] = [
-            build_event_row_context(event)
-            for event in latest_events
-        ]
+        context["profile_pet_cards"] = [build_pet_card_context(pet, self.request.user) for pet in latest_pets]
+        context["profile_event_rows"] = [build_event_row_context(event) for event in latest_events]
         return context
 
 
@@ -130,14 +117,8 @@ class ProfileDeleteView(LoginRequiredMixin, OnlyOwnerMixin, DeleteView):
         latest_pets = profile_user.pets.select_related("owner").prefetch_related("events").all()[:6]
         latest_events = profile_user.events.select_related("pet", "owner").all()[:10]
 
-        context["profile_pet_cards"] = [
-            build_pet_card_context(pet, self.request.user)
-            for pet in latest_pets
-        ]
-        context["profile_event_rows"] = [
-            build_event_row_context(event)
-            for event in latest_events
-        ]
+        context["profile_pet_cards"] = [build_pet_card_context(pet, self.request.user) for pet in latest_pets]
+        context["profile_event_rows"] = [build_event_row_context(event) for event in latest_events]
         return context
 
 

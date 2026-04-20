@@ -11,7 +11,7 @@
         </p>
     </div>
 
-    {% if can_edit_pet %}
+    {% if not is_public_view %}
     <div class="page-header__actions">
         <a href="{% url 'pets:pet_update' pk=pet.pk %}" class="btn-ui btn-ui--primary">Редактировать</a>
         <a href="{% url 'pets:pet_delete' pk=pet.pk %}" class="btn-ui btn-ui--danger">Удалить</a>
@@ -53,7 +53,7 @@
                 <span class="metric-chip">{{ pet.length_cm|floatformat:0 }} см</span>
                 {% endif %}
 
-                {% if is_owner %}
+                {% if not is_public_view %}
                 {% if is_in_shedding %}
                 <span class="badge-ui badge-ui--warning">В линьке</span>
                 {% endif %}
@@ -75,14 +75,13 @@
                     {% if pet_age_display %}({{ pet_age_display }}){% endif %}
                 </div>
 
-                {% if is_owner %}
+                {% if not is_public_view %}
                 <div><strong>Дата появления у вас:</strong> {{ pet.acquired_date|date:"d.m.Y"|default:"—" }}</div>
                 {% else %}
-                <div><strong>Дата появления у владельца:</strong> {{ pet.acquired_date|date:"d.m.Y"|default:"—" }}</div>
                 <div><strong>Владелец:</strong> {{ owner_display }}</div>
                 {% endif %}
 
-                {% if pet.feeding_notes %}
+                {% if pet.feeding_notes and not is_public_view %}
                 <div><strong>Рацион:</strong> {{ pet.feeding_notes|linebreaksbr }}</div>
                 {% endif %}
             </div>
@@ -90,8 +89,8 @@
     </div>
 </section>
 
+{% if not is_public_view %}
 
-{% if is_owner or can_edit_pet %}
 {% if pet.notes %}
 <section class="card-ui mb-4">
     <h2 class="section-title mb-3">Комментарий</h2>
@@ -154,13 +153,13 @@
             </tr>
             </thead>
             <tbody>
-            {% for event in pet.events.all|slice:":6" %}
+            {% for row in pet_event_rows %}
             <tr>
-                <td>{{ event.get_event_type_display }}</td>
-                <td>{{ event.event_datetime|date:"d.m.Y H:i" }}</td>
-                <td>{{ event.comment|default:"—"|truncatechars:80 }}</td>
+                <td>{{ row.event.get_event_type_display }}</td>
+                <td>{{ row.event.event_datetime|date:"d.m.Y H:i" }}</td>
+                <td>{{ row.event_comment_display|linebreaksbr }}</td>
                 <td>
-                    <a href="{% url 'pets:event_detail' pk=event.pk %}" class="btn-ui btn-ui--ghost btn-ui--sm">
+                    <a href="{% url 'pets:event_detail' pk=row.event.pk %}" class="btn-ui btn-ui--ghost btn-ui--sm">
                         Подробнее
                     </a>
                 </td>
@@ -178,7 +177,7 @@
     </div>
     {% endif %}
 </section>
+
 {% endif %}
 
 {% endblock %}
-
