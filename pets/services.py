@@ -297,10 +297,7 @@ def build_pet_card_context(pet: Pet, user) -> dict:
     """Собирает контекст карточки питомца."""
     is_authenticated = bool(user and user.is_authenticated)
     is_pet_owner = bool(is_authenticated and user.id == pet.owner_id)
-    is_pet_moderator = bool(
-        is_authenticated
-        and (user.is_superuser or user.groups.filter(name="Moderators").exists())
-    )
+    is_pet_moderator = bool(is_authenticated and (user.is_superuser or user.groups.filter(name="Moderators").exists()))
 
     return {
         "pet": pet,
@@ -320,3 +317,5 @@ def build_event_row_context(event: Event) -> dict:
         "event": event,
         "event_comment_display": get_event_comment_display(event),
     }
+
+

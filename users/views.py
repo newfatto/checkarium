@@ -20,6 +20,7 @@ from .services import (
     create_telegram_deep_link_for_user,
     disable_care_notifications,
     enable_care_notifications,
+    unlink_telegram_account,
 )
 
 
@@ -132,8 +133,7 @@ class TelegramConnectView(LoginRequiredMixin, View):
             raise PermissionDenied
 
         if user.telegram_id:
-            enable_care_notifications(user)
-            messages.success(request, "Уведомления об уходе включены.")
+            messages.info(request, "Telegram уже подключён.")
             return redirect("users:profile_detail", pk=user.pk)
 
         deep_link = create_telegram_deep_link_for_user(user)
@@ -169,4 +169,22 @@ class TelegramEnableView(LoginRequiredMixin, View):
 
         enable_care_notifications(user)
         messages.success(request, "Уведомления об уходе включены.")
+        return redirect("users:profile_detail", pk=user.pk)
+
+
+class TelegramUnlinkView(LoginRequiredMixin, View):
+    """Отвязывает Telegram-аккаунт пользователя."""
+
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
+        user = get_object_or_404(CustomUser, pk=pk)
+
+        if request.user != user:
+            raise PermissionDenied
+
+        if not user.telegram_id:
+            messages.info(request, "Telegram уже не подключён.")
+            return redirect("users:profile_detail", pk=user.pk)
+
+        unlink_telegram_account(user)
+        messages.success(request, "Telegram отвязан, уведомления выключены.")
         return redirect("users:profile_detail", pk=user.pk)

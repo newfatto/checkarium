@@ -61,7 +61,14 @@
                 {% if can_handle %}
                 <span class="badge-ui badge-ui--success">Можно трогать</span>
                 {% else %}
-                <span class="badge-ui badge-ui--danger">Нельзя трогать</span>
+                <span class="badge-ui badge-ui--danger">
+                    Нельзя трогать
+                    {% if is_in_shedding and shedding_until %}
+                        до {{ shedding_until|date:"d.m.Y H:i" }}
+                    {% elif no_handling_until %}
+                        до {{ no_handling_until|date:"d.m.Y H:i" }}
+                    {% endif %}
+                </span>
                 {% endif %}
                 {% endif %}
             </div>
