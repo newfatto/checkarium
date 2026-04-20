@@ -6,7 +6,6 @@ from django.urls import reverse
 from .validators import validate_time_zone
 
 
-
 class CustomUserManager(BaseUserManager):
     """Менеджер для кастомной модели пользователя с авторизацией по email."""
 
@@ -134,6 +133,12 @@ class CustomUser(AbstractUser):
         default=False,
         verbose_name="Уведомления об уходе",
         help_text="Получать ежедневные уведомления в Telegram.",
+    )
+
+    last_care_notification_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name="Дата последнего уведомления об уходе",
     )
 
     time_zone = models.CharField(

@@ -1,9 +1,14 @@
 import secrets
 from typing import Any
+from urllib.parse import urljoin
 
 import requests
 from django.conf import settings
 from django.utils import timezone
+
+from pets.models import Event, Pet
+from pets.services import get_next_repeat_datetime, pet_can_handle, get_pet_shedding_until
+from users.timezone_services import get_user_local_now
 
 from .models import CustomUser
 
@@ -42,9 +47,7 @@ def link_telegram_account_by_token(token: str, chat_id: int) -> CustomUser | Non
         return None
 
     user = (
-        CustomUser.objects.filter(telegram_link_token=token)
-        .only("id", "telegram_id", "telegram_link_token")
-        .first()
+        CustomUser.objects.filter(telegram_link_token=token).only("id", "telegram_id", "telegram_link_token").first()
     )
     if not user:
         return None
@@ -101,3 +104,112 @@ def get_telegram_updates(offset: int | None = None) -> list[dict[str, Any]]:
     response.raise_for_status()
     data = response.json()
     return data.get("result", [])
+
+
+def get_pet_tasks_for_today(pet: Pet, user) -> list[str]:
+    """Возвращает список дел на сегодня по питомцу."""
+    tasks: list[str] = ["поменяй воду"]
+
+    local_now = get_user_local_now(user)
+    today = local_now.date()
+    user_tz = local_now.tzinfo
+
+    event_type_map = {
+        Event.EventType.FEEDING: "покормить",
+        Event.EventType.CLEANING: "сделать уборку",
+        Event.EventType.MEASUREMENT: "измерить и взвесить",
+    }
+
+    for event_type, task_label in event_type_map.items():
+        last_event = (
+            pet.events.filter(
+                event_type=event_type,
+                repeat_after_days__isnull=False,
+            )
+            .order_by("-event_datetime", "-pk")
+            .first()
+        )
+
+        if not last_event:
+            continue
+
+        next_dt = get_next_repeat_datetime(last_event)
+        if not next_dt:
+            continue
+
+        local_next_dt = next_dt.astimezone(user_tz)
+        if local_next_dt.date() == today:
+            tasks.append(task_label)
+
+    custom_events = pet.events.filter(
+        event_type=Event.EventType.CUSTOM,
+    ).order_by("-event_datetime")
+
+    for event in custom_events:
+        next_dt = get_next_repeat_datetime(event)
+        if not next_dt:
+            continue
+
+        local_next_dt = next_dt.astimezone(user_tz)
+        if local_next_dt.date() == today:
+            event_name = event.title.strip() if event.title else "другое событие"
+            tasks.append(event_name)
+
+    return tasks
+
+
+def build_daily_care_notification_text(user: CustomUser) -> str:
+    """Собирает ежедневное сообщение об уходе для пользователя."""
+    lines: list[str] = [f"Приветствую, {user.first_name or user.email}!", ""]
+
+    pets = user.pets.prefetch_related("events").order_by("name")
+    user_tz = get_user_local_now(user).tzinfo
+
+    for pet in pets:
+        lines.append(pet.name)
+
+        if pet_can_handle(pet):
+            lines.append("можно брать на руки")
+        else:
+            lines.append("нельзя брать на руки")
+
+        shedding_until = get_pet_shedding_until(pet)
+        if shedding_until:
+            local_shedding_until = shedding_until.astimezone(user_tz)
+            lines.append(f"линька до {local_shedding_until.strftime('%d.%m.%Y %H:%M')}")
+
+        tasks = get_pet_tasks_for_today(pet, user)
+        if tasks:
+            lines.append("")
+            lines.append("Важные дела на сегодня:")
+            for task in tasks:
+                lines.append(f"- {task}")
+
+        lines.append("")
+
+    lines.append("Если есть событие по уходу за питомцем, добавь его на странице:")
+    lines.append(urljoin(settings.SITE_URL.rstrip("/") + "/", "pets/events/"))
+
+    return "\n".join(lines)
+
+
+def should_send_daily_notification_now(user: CustomUser) -> bool:
+    """Проверяет, нужно ли отправить пользователю ежедневное уведомление сейчас."""
+    if not user.care_notifications_enabled:
+        return False
+
+    if not user.telegram_id:
+        return False
+
+    local_now = get_user_local_now(user)
+
+    if local_now.hour != 7:
+        return False
+
+    if local_now.minute >= 15:
+        return False
+
+    if user.last_care_notification_date == local_now.date():
+        return False
+
+    return True

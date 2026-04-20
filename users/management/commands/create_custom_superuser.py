@@ -44,6 +44,4 @@ class Command(BaseCommand):
             password=password,
         )
 
-        self.stdout.write(
-            self.style.SUCCESS("Суперпользователь успешно создан.")
-        )
+        self.stdout.write(self.style.SUCCESS("Суперпользователь успешно создан."))

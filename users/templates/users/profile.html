@@ -167,14 +167,16 @@
                 <a href="{% url 'pets:event_create' event_type='cleaning' %}" class="btn-ui btn-ui--secondary">Уборка</a>
                 <a href="{% url 'pets:event_create' event_type='measurement' %}" class="btn-ui btn-ui--ghost">Измерение</a>
                 <a href="{% url 'pets:event_create' event_type='custom' %}" class="btn-ui btn-ui--ghost">Своё событие</a>
-                <a href="{% url 'pets:event_list' %}" class="btn-ui btn-ui--ghost">Все события</a>
+
             {% endif %}
         </div>
     </div>
 
     {% if profile_event_rows %}
         {% include 'pets/includes/events_table.html' with event_rows=profile_event_rows filter_pets=None selected_pet_ids=None selected_event_types=None next_ordering=None event_type_choices=None %}
+        <a href="{% url 'pets:event_list' %}" class="btn-ui btn-ui--primary">Просмотреть все события</a>
     {% else %}
+
         <div class="empty-state">
             <div class="empty-state__title">Событий пока нет</div>
             <div class="empty-state__text">

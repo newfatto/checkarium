@@ -1,9 +1,12 @@
 from django import forms
+from django.utils import timezone
+
+from users.timezone_services import get_user_tzinfo
 
 from .models import Event, Pet
 
-
 # ---------------- PET ----------------
+
 
 class PetForm(forms.ModelForm):
     class Meta:
@@ -20,7 +23,6 @@ class PetForm(forms.ModelForm):
             "weight_grams",
             "length_cm",
             "photo",
-
             "feeding_notes",
             "notes",
         ]
@@ -56,9 +58,7 @@ class PetForm(forms.ModelForm):
                 format="%Y-%m-%d",
                 attrs={"type": "date", "class": "form-control"},
             ),
-            "weight_grams": forms.NumberInput(
-                attrs={"class": "form-control", "placeholder": "Вес в граммах"}
-            ),
+            "weight_grams": forms.NumberInput(attrs={"class": "form-control", "placeholder": "Вес в граммах"}),
             "length_cm": forms.NumberInput(
                 attrs={"class": "form-control", "placeholder": "Длина в сантиметрах", "step": "0.1"}
             ),
@@ -82,7 +82,9 @@ class PetForm(forms.ModelForm):
 
 # ---------------- BASE EVENT ----------------
 
+
 class BaseEventForm(forms.ModelForm):
+
     class Meta:
         model = Event
         fields = [
@@ -116,12 +118,8 @@ class BaseEventForm(forms.ModelForm):
                 format="%Y-%m-%dT%H:%M",
             ),
             "comment": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-            "repeat_after_days": forms.NumberInput(
-                attrs={"class": "form-control", "placeholder": "Например: 7"}
-            ),
-            "no_handling_days": forms.NumberInput(
-                attrs={"class": "form-control", "placeholder": "Например: 2"}
-            ),
+            "repeat_after_days": forms.NumberInput(attrs={"class": "form-control", "placeholder": "Например: 7"}),
+            "no_handling_days": forms.NumberInput(attrs={"class": "form-control", "placeholder": "Например: 2"}),
             "weight_grams": forms.NumberInput(attrs={"class": "form-control"}),
             "length_cm": forms.NumberInput(attrs={"class": "form-control", "step": "0.1"}),
         }
@@ -129,6 +127,7 @@ class BaseEventForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user", None)
         is_moderator = kwargs.pop("is_moderator", False)
+        self.user = user
         super().__init__(*args, **kwargs)
 
         self.fields["event_datetime"].input_formats = ["%Y-%m-%dT%H:%M"]
@@ -138,11 +137,32 @@ class BaseEventForm(forms.ModelForm):
 
         self.fields["event_type"].disabled = True
 
+    def clean_event_datetime(self):
+        """Преобразует введённое пользователем время в aware datetime его часового пояса."""
+        event_datetime = self.cleaned_data.get("event_datetime")
+
+        if not event_datetime or not self.user:
+            return event_datetime
+
+        user_tz = get_user_tzinfo(self.user.time_zone)
+
+        if timezone.is_aware(event_datetime):
+            naive_local_dt = timezone.make_naive(
+                event_datetime,
+                timezone.get_current_timezone(),
+            )
+        else:
+            naive_local_dt = event_datetime
+
+        return timezone.make_aware(naive_local_dt, user_tz)
+
 
 # ---------------- SPECIFIC FORMS ----------------
 
+
 class FeedingEventForm(BaseEventForm):
-    """ Форма для создания события 'Кормление' """
+    """Форма для создания события 'Кормление'"""
+
     class Meta(BaseEventForm.Meta):
         fields = [
             "pet",
@@ -159,7 +179,8 @@ class FeedingEventForm(BaseEventForm):
 
 
 class SheddingEventForm(BaseEventForm):
-    """ Форма для создания события 'Линька' """
+    """Форма для создания события 'Линька'"""
+
     class Meta(BaseEventForm.Meta):
         fields = [
             "pet",

@@ -1,4 +1,3 @@
-
 TIME_ZONE_CHOICES = [
     ("UTC-12:00", "UTC-12"),
     ("UTC-11:00", "UTC-11"),

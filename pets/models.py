@@ -1,7 +1,7 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
-from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 
@@ -35,10 +35,7 @@ class Pet(models.Model):
         verbose_name="Владелец",
     )
 
-    name = models.CharField(
-        max_length=100,
-        verbose_name="Имя животного"
-    )
+    name = models.CharField(max_length=100, verbose_name="Имя животного")
 
     animal_type = models.CharField(
         max_length=20,
@@ -100,10 +97,7 @@ class Pet(models.Model):
         help_text="Например: мышь-голыш, крысёныш, сверчки, тараканы, овощная смесь",
     )
 
-    notes = models.TextField(
-        blank=True,
-        verbose_name="Комментарий"
-    )
+    notes = models.TextField(blank=True, verbose_name="Комментарий")
 
     status = models.CharField(
         max_length=20,
@@ -113,17 +107,16 @@ class Pet(models.Model):
     )
 
     is_public = models.BooleanField(
-        default=False,
-        verbose_name='Показывать питомца всем',
-        help_text='Если включено, карточка будет видна на главной странице и авторизованным пользователям'
+        default=True,
+        verbose_name="Показывать питомца всем",
+        help_text="Если включено, карточка будет видна на главной странице и авторизованным пользователям",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
     def clean(self):
-        """ Проверяет корректность дат."""
+        """Проверяет корректность дат."""
         if self.birth_date and self.birth_date > timezone.localdate():
             raise ValidationError({"birth_date": "Дата рождения не может быть в будущем."})
         if self.acquired_date and self.acquired_date > timezone.localdate():
@@ -136,7 +129,6 @@ class Pet(models.Model):
 
     def get_absolute_url(self) -> str:
         return reverse("pets:pet_detail", kwargs={"pk": self.pk})
-
 
     class Meta:
         ordering = ["-created_at"]
@@ -207,9 +199,7 @@ class Event(models.Model):
         verbose_name="Вес (г)",
     )
 
-    length_cm = models.DecimalField(
-        max_digits=6,
-        decimal_places=2,
+    length_cm = models.PositiveIntegerField(
         blank=True,
         null=True,
         verbose_name="Длина (см)",
@@ -220,26 +210,21 @@ class Event(models.Model):
     def clean(self):
         """Проверяет корректность данных события."""
         if self.event_type == self.EventType.CUSTOM and not self.title:
-            raise ValidationError({
-                "title": "Для пользовательского события укажите название."
-            })
+            raise ValidationError({"title": "Для пользовательского события укажите название."})
 
         if self.event_type == self.EventType.MEASUREMENT:
             if self.weight_grams is None and self.length_cm is None:
                 raise ValidationError("Для измерения укажите вес или длину.")
 
         if self.pet_id and self.owner_id and self.pet.owner_id != self.owner_id:
-            raise ValidationError({
-                "pet": "Питомец должен принадлежать выбранному владельцу."
-            })
+            raise ValidationError({"pet": "Питомец должен принадлежать выбранному владельцу."})
 
         if self.event_datetime and self.event_datetime > timezone.now():
-            raise ValidationError({
-                "event_datetime": "Дата и время события не могут быть в будущем."
-            })
+            raise ValidationError({"event_datetime": "Дата и время события не могут быть в будущем."})
 
     def save(self, *args, **kwargs):
         """При сохранении измерения обновляем параметры питомца."""
+
         self.full_clean()
         super().save(*args, **kwargs)
 

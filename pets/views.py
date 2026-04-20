@@ -18,13 +18,10 @@ from .models import Event, Pet
 from .services import (
     build_event_row_context,
     build_pet_card_context,
-    can_edit_pet,
-    can_view_pet,
     get_measurement_comment_lines,
     get_owner_display,
     get_pet_age_display,
     get_upcoming_pet_tasks,
-    is_moderator,
     pet_can_handle,
     pet_is_in_shedding,
 )
@@ -34,21 +31,35 @@ class ModeratorAccessMixin:
     moderator_group_name = "Moderators"
 
     def is_moderator(self) -> bool:
-        return is_moderator(self.request.user)
+        user = self.request.user
+        if not user.is_authenticated:
+            return False
+        return user.is_superuser or user.groups.filter(name=self.moderator_group_name).exists()
+
+    def is_owner(self, obj) -> bool:
+        return getattr(obj, "owner_id", None) == self.request.user.id
+
+    def can_edit_pet(self, pet: Pet) -> bool:
+        return self.is_moderator() or self.is_owner(pet)
+
+    def can_view_pet(self, pet: Pet) -> bool:
+        if pet.is_public:
+            return True
+        return self.is_moderator() or self.is_owner(pet)
 
 
 class PetEditPermissionMixin(ModeratorAccessMixin):
     def dispatch(self, request, *args, **kwargs):
         obj = self.get_object()
-        if not can_edit_pet(request.user, obj):
+        if not self.can_edit_pet(obj):
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
 
 
-class PetDetailPermissionMixin(LoginRequiredMixin, ModeratorAccessMixin):
+class PetDetailPermissionMixin(ModeratorAccessMixin):
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if not can_view_pet(request.user, self.object):
+        if not self.can_view_pet(self.object):
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
 
@@ -74,10 +85,7 @@ class PetListView(LoginRequiredMixin, ModeratorAccessMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["pet_cards"] = [
-            build_pet_card_context(pet, self.request.user)
-            for pet in context["pets"]
-        ]
+        context["pet_cards"] = [build_pet_card_context(pet, self.request.user) for pet in context["pets"]]
         return context
 
 
@@ -92,13 +100,18 @@ class PetDetailView(PetDetailPermissionMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         pet = self.object
+        events = pet.events.all().order_by("-event_datetime")[:6]
         context["pet_age_display"] = get_pet_age_display(pet.birth_date)
         context["owner_display"] = get_owner_display(pet.owner)
         context["is_owner"] = self.request.user.id == pet.owner_id
-        context["can_edit_pet"] = can_edit_pet(self.request.user, pet)
+        context["can_edit_pet"] = self.can_edit_pet(pet)
         context["can_handle"] = pet_can_handle(pet)
         context["is_in_shedding"] = pet_is_in_shedding(pet)
         context["upcoming_tasks"] = get_upcoming_pet_tasks(pet)
+        context["is_public_view"] = not self.can_edit_pet(pet)
+        context["pet_event_rows"] = [
+            build_event_row_context(event) for event in events
+        ]
         return context
 
 
@@ -223,9 +236,7 @@ class EventCreateView(LoginRequiredMixin, ModeratorAccessMixin, CreateView):
         return initial
 
     def form_valid(self, form):
-        form.instance.owner = (
-            form.cleaned_data["pet"].owner if self.is_moderator() else self.request.user
-        )
+        form.instance.owner = form.cleaned_data["pet"].owner if self.is_moderator() else self.request.user
         form.instance.event_type = self.event_type
         return super().form_valid(form)
 
@@ -244,9 +255,7 @@ class EventUpdateView(LoginRequiredMixin, EventOwnerOrModeratorMixin, UpdateView
         return kwargs
 
     def form_valid(self, form):
-        form.instance.owner = (
-            form.cleaned_data["pet"].owner if self.is_moderator() else self.request.user
-        )
+        form.instance.owner = form.cleaned_data["pet"].owner if self.is_moderator() else self.request.user
         return super().form_valid(form)
 
 

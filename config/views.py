@@ -17,8 +17,5 @@ class HomePageView(TemplateView):
             .prefetch_related("events")
             .order_by("-created_at")
         )
-        context["public_pet_cards"] = [
-            build_pet_card_context(pet, self.request.user)
-            for pet in pets
-        ]
+        context["public_pet_cards"] = [build_pet_card_context(pet, self.request.user) for pet in pets]
         return context
