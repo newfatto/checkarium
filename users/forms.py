@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.core.exceptions import ValidationError
 
 from users.constants import TIME_ZONE_CHOICES
 
@@ -49,6 +50,17 @@ class CustomUserCreationForm(UserCreationForm):
                 "class": "form-control-ui",
             }
         )
+
+    def clean_email(self) -> str:
+        """Проверяет уникальность email без учёта регистра."""
+        email = self.cleaned_data["email"].strip().lower()
+        if CustomUser.objects.filter(email__iexact=email).exists():
+            raise ValidationError("Пользователь с таким email уже существует.")
+        return email
+
+    def clean_first_name(self) -> str:
+        """Убирает лишние пробелы в имени."""
+        return self.cleaned_data["first_name"].strip()
 
 
 class CustomAuthenticationForm(AuthenticationForm):
@@ -142,3 +154,23 @@ class CustomUserUpdateForm(forms.ModelForm):
         """Настроить отображение полей формы."""
         super().__init__(*args, **kwargs)
         self.fields["avatar"].widget.attrs.update({"class": "form-control-ui"})
+
+    def clean_email(self) -> str:
+        """Проверяет уникальность email без учёта регистра."""
+        email = self.cleaned_data["email"].strip().lower()
+        qs = CustomUser.objects.filter(email__iexact=email).exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise ValidationError("Пользователь с таким email уже существует.")
+        return email
+
+    def clean_first_name(self) -> str:
+        """Убирает лишние пробелы в имени."""
+        return self.cleaned_data["first_name"].strip()
+
+    def clean_last_name(self) -> str:
+        """Убирает лишние пробелы в фамилии."""
+        return self.cleaned_data.get("last_name", "").strip()
+
+    def clean_phone_number(self) -> str:
+        """Убирает лишние пробелы в телефоне."""
+        return self.cleaned_data.get("phone_number", "").strip()

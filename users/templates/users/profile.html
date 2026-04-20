@@ -197,8 +197,8 @@
     </div>
 
     {% if profile_event_rows %}
-    {% include 'pets/includes/events_table.html' with event_rows=profile_event_rows filter_pets=None
-    selected_pet_ids=None selected_event_types=None next_ordering=None event_type_choices=None %}
+    {% include 'pets/includes/events_table.html' with event_rows=profile_event_rows %}
+
     <a href="{% url 'pets:event_list' %}" class="btn-ui btn-ui--primary">Просмотреть все события</a>
     {% else %}
 

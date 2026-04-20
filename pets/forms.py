@@ -79,6 +79,22 @@ class PetForm(forms.ModelForm):
         self.fields["birth_date"].input_formats = ["%Y-%m-%d"]
         self.fields["acquired_date"].input_formats = ["%Y-%m-%d"]
 
+    def clean_pet(self):
+        """Проверяет, что питомец доступен пользователю."""
+        pet = self.cleaned_data.get("pet")
+        if self.user and pet and pet.owner_id != self.user.id:
+            raise forms.ValidationError("Нельзя создать событие для чужого питомца.")
+        return pet
+
+    def clean_name(self):
+        return self.cleaned_data["name"].strip()
+
+    def clean_species_name(self):
+        return self.cleaned_data["species_name"].strip()
+
+    def clean_morph(self):
+        return self.cleaned_data.get("morph", "").strip()
+
 
 # ---------------- BASE EVENT ----------------
 
@@ -155,6 +171,12 @@ class BaseEventForm(forms.ModelForm):
             naive_local_dt = event_datetime
 
         return timezone.make_aware(naive_local_dt, user_tz)
+
+    def clean_title(self):
+        return self.cleaned_data.get("title", "").strip()
+
+    def clean_comment(self):
+        return self.cleaned_data.get("comment", "").strip()
 
 
 # ---------------- SPECIFIC FORMS ----------------

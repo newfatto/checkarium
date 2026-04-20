@@ -3,6 +3,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
+from django.core.validators import MaxValueValidator, MinValueValidator
+from users.validators import validate_image_file
 
 
 class Pet(models.Model):
@@ -77,11 +79,13 @@ class Pet(models.Model):
         blank=True,
         null=True,
         verbose_name="Вес (г)",
+        validators=[MinValueValidator(1), MaxValueValidator(200000)],
     )
     length_cm = models.PositiveIntegerField(
         blank=True,
         null=True,
         verbose_name="Длина (см)",
+        validators=[MinValueValidator(1), MaxValueValidator(500)],
     )
 
     photo = models.ImageField(
@@ -89,6 +93,7 @@ class Pet(models.Model):
         blank=True,
         null=True,
         verbose_name="Фото",
+        validators=[validate_image_file],
     )
 
     feeding_notes = models.TextField(
@@ -117,10 +122,29 @@ class Pet(models.Model):
 
     def clean(self):
         """Проверяет корректность дат."""
+        super().clean()
+
+        if self.name:
+            self.name = self.name.strip()
+
+        if self.species_name:
+            self.species_name = self.species_name.strip()
+
+        if self.morph:
+            self.morph = self.morph.strip()
+
+        if self.name == "":
+            raise ValidationError({"name": "Имя животного не может быть пустым."})
+
+        if self.species_name == "":
+            raise ValidationError({"species_name": "Вид не может быть пустым."})
+
         if self.birth_date and self.birth_date > timezone.localdate():
             raise ValidationError({"birth_date": "Дата рождения не может быть в будущем."})
+
         if self.acquired_date and self.acquired_date > timezone.localdate():
             raise ValidationError({"acquired_date": "Дата начала владения не может быть в будущем."})
+
         if self.birth_date and self.acquired_date and self.acquired_date < self.birth_date:
             raise ValidationError({"acquired_date": "Дата начала владения не может быть раньше даты рождения."})
 
@@ -129,6 +153,11 @@ class Pet(models.Model):
 
     def get_absolute_url(self) -> str:
         return reverse("pets:pet_detail", kwargs={"pk": self.pk})
+
+    def save(self, *args, **kwargs):
+        """Сохраняет питомца после полной валидации."""
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ["-created_at"]
@@ -185,36 +214,58 @@ class Event(models.Model):
         blank=True,
         null=True,
         verbose_name="Повторить через (дней)",
+        validators=[MinValueValidator(1), MaxValueValidator(3650)],
     )
 
     no_handling_days = models.PositiveIntegerField(
         blank=True,
         null=True,
         verbose_name="Нельзя трогать (суток)",
+        validators=[MaxValueValidator(365)],
     )
 
     weight_grams = models.PositiveIntegerField(
         blank=True,
         null=True,
         verbose_name="Вес (г)",
+        validators=[MinValueValidator(1), MaxValueValidator(200000)],
     )
 
     length_cm = models.PositiveIntegerField(
         blank=True,
         null=True,
         verbose_name="Длина (см)",
+        validators=[MinValueValidator(1), MaxValueValidator(500)],
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
         """Проверяет корректность данных события."""
+        super().clean()
+
+        if self.title:
+            self.title = self.title.strip()
+
+        if self.comment:
+            self.comment = self.comment.strip()
+
         if self.event_type == self.EventType.CUSTOM and not self.title:
             raise ValidationError({"title": "Для пользовательского события укажите название."})
+
+        if self.event_type != self.EventType.CUSTOM and self.title:
+            raise ValidationError({"title": "Название заполняется только для события 'Другое'."})
 
         if self.event_type == self.EventType.MEASUREMENT:
             if self.weight_grams is None and self.length_cm is None:
                 raise ValidationError("Для измерения укажите вес или длину.")
+
+        if self.event_type != self.EventType.MEASUREMENT:
+            if self.weight_grams is not None or self.length_cm is not None:
+                raise ValidationError("Вес и длина указываются только для события измерения.")
+
+        if self.event_type == self.EventType.SHEDDING and self.repeat_after_days:
+            raise ValidationError({"repeat_after_days": "Для линьки повторение обычно не задаётся."})
 
         if self.pet_id and self.owner_id and self.pet.owner_id != self.owner_id:
             raise ValidationError({"pet": "Питомец должен принадлежать выбранному владельцу."})

@@ -2,8 +2,15 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.urls import reverse
+from django.core.exceptions import ValidationError
 
-from .validators import validate_time_zone
+from django.core.validators import EmailValidator
+from .validators import (
+    validate_image_file,
+    validate_person_name,
+    validate_phone_number,
+    validate_time_zone,
+)
 
 
 class CustomUserManager(BaseUserManager):
@@ -68,16 +75,19 @@ class CustomUser(AbstractUser):
 
     email = models.EmailField(
         unique=True,
+        validators=[EmailValidator(message="Введите корректный email.")],
         verbose_name="Email",
     )
     first_name = models.CharField(
         max_length=150,
         verbose_name="Имя",
+        validators=[validate_person_name],
     )
     last_name = models.CharField(
         max_length=150,
         blank=True,
         verbose_name="Фамилия",
+        validators=[validate_person_name],
     )
     city = models.CharField(
         max_length=150,
@@ -88,12 +98,14 @@ class CustomUser(AbstractUser):
         max_length=20,
         blank=True,
         verbose_name="Телефон",
+        validators=[validate_phone_number],
     )
     avatar = models.ImageField(
         upload_to="users/avatars/",
         blank=True,
         null=True,
         verbose_name="Аватар",
+        validators=[validate_image_file],
     )
     bio = models.TextField(
         blank=True,
@@ -147,6 +159,27 @@ class CustomUser(AbstractUser):
         verbose_name="Часовой пояс",
         validators=[validate_time_zone],
     )
+
+    def clean(self) -> None:
+        """Нормализует и проверяет данные пользователя."""
+        super().clean()
+
+        if self.email:
+            self.email = self.email.strip().lower()
+
+        if self.first_name:
+            self.first_name = self.first_name.strip()
+
+        if self.last_name:
+            self.last_name = self.last_name.strip()
+
+        if self.phone_number:
+            self.phone_number = self.phone_number.strip()
+
+        if self.care_notifications_enabled and not self.telegram_id:
+            raise ValidationError({
+                "care_notifications_enabled": "Нельзя включить уведомления без привязанного Telegram."
+            })
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS: list[str] = []

@@ -1,10 +1,12 @@
 import secrets
 from typing import Any
 from urllib.parse import urljoin
+from datetime import timedelta
 
 import requests
 from django.conf import settings
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 from pets.models import Event, Pet
 from pets.services import get_next_repeat_datetime, get_pet_shedding_until, pet_can_handle
@@ -47,14 +49,22 @@ def link_telegram_account_by_token(token: str, chat_id: int) -> CustomUser | Non
         return None
 
     user = (
-        CustomUser.objects.filter(telegram_link_token=token).only("id", "telegram_id", "telegram_link_token").first()
+        CustomUser.objects.filter(telegram_link_token=token)
+        .only("id", "telegram_id", "telegram_link_token", "telegram_link_token_created_at")
+        .first()
     )
+
     if not user:
-        send_telegram_message(
-            chat_id=chat_id,
-            text="Ссылка недействительна или уже использована.",
-        )
-        return
+        raise ValidationError("Ссылка недействительна или уже использована.")
+
+    if CustomUser.objects.filter(telegram_id=chat_id).exclude(pk=user.pk).exists():
+        raise ValidationError("Этот Telegram-аккаунт уже привязан к другому профилю.")
+
+    if (
+            user.telegram_link_token_created_at
+            and user.telegram_link_token_created_at < timezone.now() - timedelta(hours=1)
+    ):
+        raise ValidationError("Ссылка устарела. Запросите новую.")
 
     user.telegram_id = chat_id
     user.telegram_linked_at = timezone.now()
