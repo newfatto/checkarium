@@ -21,6 +21,8 @@ from .services import (
     get_measurement_comment_lines,
     get_owner_display,
     get_pet_age_display,
+    get_pet_no_handling_until,
+    get_pet_shedding_until,
     get_upcoming_pet_tasks,
     pet_can_handle,
     pet_is_in_shedding,
@@ -109,9 +111,9 @@ class PetDetailView(PetDetailPermissionMixin, DetailView):
         context["is_in_shedding"] = pet_is_in_shedding(pet)
         context["upcoming_tasks"] = get_upcoming_pet_tasks(pet)
         context["is_public_view"] = not self.can_edit_pet(pet)
-        context["pet_event_rows"] = [
-            build_event_row_context(event) for event in events
-        ]
+        context["pet_event_rows"] = [build_event_row_context(event) for event in events]
+        context["no_handling_until"] = get_pet_no_handling_until(pet)
+        context["shedding_until"] = get_pet_shedding_until(pet)
         return context
 
 
@@ -193,6 +195,7 @@ class EventListView(LoginRequiredMixin, EventOwnerOrModeratorMixin, ListView):
         context["selected_event_types"] = self.request.GET.getlist("event_type")
         context["current_ordering"] = current_ordering
         context["next_ordering"] = next_ordering
+        context["event_type_choices"] = Event.EventType.choices
         context["event_rows"] = [build_event_row_context(event) for event in context["events"]]
         return context
 

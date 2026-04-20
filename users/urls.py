@@ -10,7 +10,7 @@ from .views import (
     RegisterView,
     TelegramConnectView,
     TelegramDisableView,
-    TelegramEnableView,
+    TelegramEnableView, TelegramUnlinkView,
 )
 
 app_name = UsersConfig.name
@@ -36,5 +36,10 @@ urlpatterns = [
         "profile/<int:pk>/telegram/disable/",
         TelegramDisableView.as_view(),
         name="telegram_disable",
+    ),
+    path(
+        "profile/<int:pk>/telegram/unlink/",
+        TelegramUnlinkView.as_view(),
+        name="telegram_unlink",
     ),
 ]

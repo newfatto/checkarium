@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from users.services import (
+    build_telegram_welcome_text,
     get_telegram_updates,
     link_telegram_account_by_token,
     send_telegram_message,
@@ -63,9 +64,5 @@ class Command(BaseCommand):
 
                 send_telegram_message(
                     chat_id=chat_id,
-                    text=(
-                        f"Привет, {user.first_name or user.email}!\n\n"
-                        "Telegram успешно подключён.\n"
-                        "Ежедневные уведомления об уходе включены."
-                    ),
+                    text=build_telegram_welcome_text(user),
                 )

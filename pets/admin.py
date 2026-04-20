@@ -145,8 +145,6 @@ class EventAdmin(admin.ModelAdmin):
         ),
         (
             "Служебные поля",
-            {
-                "fields": ("created_at",)
-            },
+            {"fields": ("created_at",)},
         ),
     )

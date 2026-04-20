@@ -7,7 +7,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from pets.models import Event, Pet
-from pets.services import get_next_repeat_datetime, pet_can_handle, get_pet_shedding_until
+from pets.services import get_next_repeat_datetime, get_pet_shedding_until, pet_can_handle
 from users.timezone_services import get_user_local_now
 
 from .models import CustomUser
@@ -50,7 +50,11 @@ def link_telegram_account_by_token(token: str, chat_id: int) -> CustomUser | Non
         CustomUser.objects.filter(telegram_link_token=token).only("id", "telegram_id", "telegram_link_token").first()
     )
     if not user:
-        return None
+        send_telegram_message(
+            chat_id=chat_id,
+            text="Ссылка недействительна или уже использована.",
+        )
+        return
 
     user.telegram_id = chat_id
     user.telegram_linked_at = timezone.now()
@@ -213,3 +217,36 @@ def should_send_daily_notification_now(user: CustomUser) -> bool:
         return False
 
     return True
+
+def unlink_telegram_account(user: CustomUser) -> None:
+    """Отвязывает Telegram от пользователя и выключает уведомления."""
+    user.telegram_id = None
+    user.telegram_linked_at = None
+    user.telegram_link_token = None
+    user.telegram_link_token_created_at = None
+    user.care_notifications_enabled = False
+    user.last_care_notification_date = None
+    user.save(
+        update_fields=[
+            "telegram_id",
+            "telegram_linked_at",
+            "telegram_link_token",
+            "telegram_link_token_created_at",
+            "care_notifications_enabled",
+            "last_care_notification_date",
+        ]
+    )
+
+def build_telegram_welcome_text(user: CustomUser) -> str:
+    """Собирает приветственное сообщение после подключения Telegram."""
+    profile_url = urljoin(
+        settings.SITE_URL.rstrip("/") + "/",
+        user.get_absolute_url().lstrip("/"),
+    )
+
+    return (
+        f"Приветствую, {user.first_name or user.email}!\n\n"
+        "Теперь вы будете получать ежедневные уведомления об уходе за своими питомцами.\n\n"
+        "Добавить питомцев и события вы можете в своём профиле:\n"
+        f"{profile_url}"
+    )

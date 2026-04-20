@@ -82,10 +82,7 @@ class Command(BaseCommand):
 
         now = timezone.now().replace(second=0, microsecond=0)
 
-        pet_map = {
-            pet.name: pet
-            for pet in pets.select_related("owner")
-        }
+        pet_map = {pet.name: pet for pet in pets.select_related("owner")}
 
         self._seed_corn_snake_events(pet_map["Кукуруза"], now)
         self._seed_gecko_events(pet_map["Точка"], now)
