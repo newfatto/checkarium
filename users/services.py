@@ -217,10 +217,13 @@ def should_send_daily_notification_now(user: CustomUser) -> bool:
 
     local_now = get_user_local_now(user)
 
-    if local_now.hour != 7:
+    target_hour = settings.CARE_NOTIFICATIONS_HOUR
+    target_minute = settings.CARE_NOTIFICATIONS_MINUTE
+
+    if local_now.hour != target_hour:
         return False
 
-    if local_now.minute >= 15:
+    if local_now.minute < target_minute or local_now.minute >= target_minute + 15:
         return False
 
     if user.last_care_notification_date == local_now.date():

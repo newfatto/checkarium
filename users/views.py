@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView, LogoutView
+from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -83,6 +84,9 @@ class ProfileDetailView(LoginRequiredMixin, OnlyOwnerMixin, DetailView):
 
         context["profile_pet_cards"] = [build_pet_card_context(pet, self.request.user) for pet in latest_pets]
         context["profile_event_rows"] = [build_event_row_context(event) for event in latest_events]
+        context["care_notifications_time"] = (
+            f"{settings.CARE_NOTIFICATIONS_HOUR:02d}:{settings.CARE_NOTIFICATIONS_MINUTE:02d}"
+        )
         return context
 
 

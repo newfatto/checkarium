@@ -102,6 +102,27 @@ docker compose -f docker-compose.prod.yml up -d --build
 ```
 http://<VM_EXTERNAL_IP>/
 ```
+
+## Подключение Telegram-бота
+
+В проекте привязка Telegram-аккаунта пользователя работает через отдельную management-команду Django в режиме long polling.
+Необходимо после запуска контейнера запустить процесс бота в отдельном терминале:
+
+```bash
+docker compose -f docker-compose.prod.yml exec web python manage.py run_telegram_bot
+```
+Команда запускает бесконечный цикл опроса Telegram Bot API и обрабатывает входящие сообщения боту.
+В текущей реализации она нужна для обработки команды /start <token> и привязки Telegram-аккаунта к пользователю Checkarium.
+
+Останавливать команду не нужно, пока требуется работа Telegram-бота в режиме приёма входящих сообщений.
+
+Для полной работы Telegram-интеграции должны быть запущены:
+
+* Django-приложение;
+* Celery worker;
+* Celery Beat;
+* отдельный процесс с командой python manage.py telegram_bot
+
 ### Полезные команды
 
 Остановить контейнеры:

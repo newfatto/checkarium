@@ -11,7 +11,7 @@ from .timezone_services import get_user_local_now
 
 @shared_task
 def send_daily_care_notifications() -> None:
-    """Отправляет ежедневные уведомления пользователям, у которых локально 07:00."""
+    """Отправляет ежедневные уведомления пользователям в заданное локальное время."""
     users = CustomUser.objects.filter(
         care_notifications_enabled=True,
         telegram_id__isnull=False,

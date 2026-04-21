@@ -15,7 +15,7 @@
       "phone_number": "",
       "avatar": "demo/users/user_owner_1.jpg",
       "bio": "Тестовый владелец №1",
-      "telegram_id": 337248111,
+      "telegram_id": null,
       "care_notifications_enabled": true,
       "time_zone": "UTC+03:00",
       "groups": [],
