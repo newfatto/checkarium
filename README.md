@@ -32,7 +32,13 @@ Checkarium — веб-приложение на Django для владельце
 poetry install
 ```
 
-2. Создайте файл **.env** на основе **.env.sample**
+2. Создайте файл `.env` на основе `.env.sample`
+
+Для локальной разработки укажите в `.env`:
+```bash
+DEBUG=True
+```
+Иначе (`DEBUG=False`) Django не будет раздавать статику при `runserver`, и CSS/JS визуально «сломаются».
 
 3. Примените миграции:
 ```bash
@@ -45,41 +51,36 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+* Сайт: http://127.0.0.1:8000/
+* Админка: http://127.0.0.1:8000/admin/
+
 ## Локальный запуск в Docker
 
 Для dev-запуска используется docker-compose.yml:
 ```bash
 docker compose up --build
 ```
+Создайте суперпользователя:
+```bash
+docker compose exec web python manage.py createsuperuser
+```
 
-Продакшен-запуск в Docker
+## Продакшен-запуск в Docker
 
 Для запуска на сервере используется docker-compose.prod.yml.
 
-Подготовьте .env:
-```bash
-SECRET_KEY=your-secret-key
-DEBUG=False
-ALLOWED_HOSTS=127.0.0.1,localhost,<VM_EXTERNAL_IP>,<YOUR_DOMAIN>
-CSRF_TRUSTED_ORIGINS=http://127.0.0.1,http://localhost,http://<VM_EXTERNAL_IP>,https://<YOUR_DOMAIN>
-SITE_URL=http://<VM_EXTERNAL_IP>
+1. Подготовьте `.env` на основе `.env.prod.sample`.
 
-DB_NAME=checkarium
-DB_USER=checkarium_user
-DB_PASSWORD=strong-password
-DB_HOST=db
-DB_PORT=5432
-
-REDIS_URL=redis://redis:6379/0
-
-TELEGRAM_BOT_TOKEN=
-TELEGRAM_BOT_USERNAME=
-```
-Соберите и поднимите контейнеры:
+2. Соберите и поднимите контейнеры:
 ```bash
 docker compose -f docker-compose.prod.yml up -d --build
 ```
-Посмотрите логи:
+3. Создай суперпользователя:
+```bash
+docker compose -f docker-compose.prod.yml exec web python manage.py createsuperuser
+```
+
+4. Посмотрите логи:
 ```bash
 docker compose -f docker-compose.prod.yml logs -f
 ```
@@ -92,7 +93,7 @@ docker compose -f docker-compose.prod.yml logs -f
 git clone <REPOSITORY_URL>
 cd checkarium
 ```
-4. Создайте .env.
+4. Подготовьте `.env` на основе `.env.prod.sample`.
 5. Запустите:
 ```bash
 docker compose -f docker-compose.prod.yml up -d --build
@@ -114,18 +115,9 @@ docker compose -f docker-compose.prod.yml up -d --build
 Выполнить команду внутри контейнера web:
 ```bash
 docker compose -f docker-compose.prod.yml exec web bash
-Тестовые данные
 ```
+### Демо-данные
 Для заполнения БД демо-данными можно использовать management-команду проекта:
 ```bash
 python manage.py load_test_data --reset
 ```
-
-
-
-1. Установите зависимости:
-```bash
-poetry install
-```
-
-
