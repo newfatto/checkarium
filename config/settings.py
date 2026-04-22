@@ -11,8 +11,18 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = True if os.getenv("DEBUG") == "True" else False
 
 SITE_URL = os.getenv("SITE_URL", "http://127.0.0.1:8000")
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
-CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1", "http://localhost"]
+
+def get_env_list(name: str, default: str = "") -> list[str]:
+    """Возвращает список значений из переменной окружения, разделённых запятыми."""
+    raw_value = os.getenv(name, default)
+    return [item.strip() for item in raw_value.split(",") if item.strip()]
+
+
+ALLOWED_HOSTS = get_env_list("ALLOWED_HOSTS", "127.0.0.1,localhost")
+CSRF_TRUSTED_ORIGINS = get_env_list(
+    "CSRF_TRUSTED_ORIGINS",
+    "http://127.0.0.1,http://localhost",
+)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
