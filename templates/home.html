@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная | Checkarium{% endblock %}
+
+{% block content %}
+
+<!-- Блок HERO -->
+<section class="page-header">
+    <div class="page-header__content">
+        <h1 class="page-title">
+            Учёт и уход за террариумными животными — в одном месте
+        </h1>
+
+        <p class="text-soft">
+            Checkarium помогает вести учёт террариумных животных:
+            сохранять информацию о питомцах, записывать события ухода,
+            планировать будущие действия и получать ежедневные уведомления в Telegram.
+        </p>
+    </div>
+
+    <div class="page-header__actions">
+        {% if user.is_authenticated %}
+        <a href="#" class="btn-ui btn-ui--primary">Мои питомцы</a>
+        <a href="#" class="btn-ui btn-ui--ghost">Добавить питомца</a>
+        {% else %}
+
+        {% endif %}
+    </div>
+</section>
+
+<!-- Блок "Как работает Checkarium" -->
+
+<section class="mb-5">
+    <h2 class="section-title">Как работает Checkarium</h2>
+
+    <div class="features-grid">
+        <article class="card-ui feature-card">
+            <div class="feature-card__number">1</div>
+
+            <h3 class="feature-card__title">
+                Добавьте питомца
+            </h3>
+
+            <ul class="feature-card__list">
+                <li>Ведите учёт своей коллекции</li>
+                <li>Храните информацию о каждом питомце</li>
+                <li>Отслеживайте рост и вес</li>
+            </ul>
+        </article>
+
+        <article class="card-ui feature-card">
+            <div class="feature-card__number">2</div>
+
+            <h3 class="feature-card__title">
+                Записывайте события
+            </h3>
+
+            <ul class="feature-card__list">
+                <li>Кормление, линька, измерения</li>
+                <li>Добавляйте свои события</li>
+                <li>Настраивайте повторения</li>
+            </ul>
+        </article>
+
+        <article class="card-ui feature-card">
+            <div class="feature-card__number">3</div>
+
+            <h3 class="feature-card__title">
+                Получайте напоминания
+            </h3>
+
+            <ul class="feature-card__list">
+                <li>Ежедневные уведомления</li>
+                <li>Контроль контакта с животным</li>
+                <li>Напоминания в Telegram</li>
+            </ul>
+        </article>
+    </div>
+</section>
+
+<!-- Блок "Питомцы пользователей" -->
+
+<h2 class="section-title">Питомцы пользователей</h2>
+<p class="text-soft">
+    Публичные карточки животных, которыми владельцы решили поделиться.
+</p>
+
+{% if public_pet_cards %}
+{% include 'pets/includes/pet_cards_grid.html' with pet_cards=public_pet_cards %}
+{% else %}
+<section class="empty-state">
+    <div class="empty-state__title">Пока нет публичных питомцев</div>
+    <div class="empty-state__text">
+        Когда пользователи включат показ своих животных, карточки появятся здесь.
+    </div>
+</section>
+{% endif %}
+{% endblock %}

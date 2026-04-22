@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Регистрация | Checkarium{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__content">
+        <h1 class="page-title">Регистрация</h1>
+        <p class="text-soft">
+            Создайте аккаунт, чтобы вести учёт питомцев и событий ухода.
+        </p>
+    </div>
+</section>
+
+<section class="form-card mx-auto">
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+                <div class="alert-ui alert-ui--danger">{{ error }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="form-grid form-grid--2">
+            {% for field in form %}
+                <div class="form-group">
+                    <label class="form-label-ui" for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <div class="form-help">{{ field.help_text }}</div>
+                    {% endif %}
+
+                    {% for error in field.errors %}
+                        <div class="form-error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4 d-flex gap-3 flex-wrap">
+            <button type="submit" class="btn-ui btn-ui--primary">
+                Зарегистрироваться
+            </button>
+
+            <a href="{% url 'users:login' %}" class="btn-ui btn-ui--ghost">
+                Уже есть аккаунт
+            </a>
+        </div>
+    </form>
+</section>
+{% endblock %}

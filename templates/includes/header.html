@@ -1,0 +1,73 @@
+<nav class="navbar navbar-expand-lg navbar-ui">
+    <div class="container-fluid app-container">
+        <a class="navbar-brand fw-bold" href="{% url 'home' %}">
+            🐍 Checkarium
+        </a>
+
+        <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarMain"
+            aria-controls="navbarMain"
+            aria-expanded="false"
+            aria-label="Переключить навигацию"
+        >
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+                <li class="nav-item">
+                    <a class="nav-link nav-link-ui" href="{% url 'home' %}">
+                        Главная
+                    </a>
+                </li>
+
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-ui" href="{% url 'pets:pet_list' %}">
+                            Мои питомцы
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-ui" href="{% url 'pets:event_list' %}">
+                            События
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a
+                            class="nav-link nav-link-ui"
+                            href="{% url 'users:profile_detail' pk=user.pk %}"
+                        >
+                            Профиль
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <form method="post" action="{% url 'users:logout' %}" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-ui btn-ui--ghost btn-ui--sm">
+                                Выйти
+                            </button>
+                        </form>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-ui" href="{% url 'users:login' %}">
+                            Вход
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="btn-ui btn-ui--primary btn-ui--sm" href="{% url 'users:register' %}">
+                            Регистрация
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
