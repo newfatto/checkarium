@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
@@ -30,28 +28,37 @@ from .services import (
 
 
 class ModeratorAccessMixin:
+    """Миксин с общей логикой проверки ролей и прав доступа к питомцам."""
+
     moderator_group_name = "Moderators"
 
     def is_moderator(self) -> bool:
+        """Проверяет, является ли текущий пользователь модератором или суперпользователем."""
         user = self.request.user
         if not user.is_authenticated:
             return False
         return user.is_superuser or user.groups.filter(name=self.moderator_group_name).exists()
 
     def is_owner(self, obj) -> bool:
+        """Проверяет, принадлежит ли объект текущему пользователю."""
         return getattr(obj, "owner_id", None) == self.request.user.id
 
     def can_edit_pet(self, pet: Pet) -> bool:
+        """Определяет, может ли текущий пользователь редактировать питомца."""
         return self.is_moderator() or self.is_owner(pet)
 
     def can_view_pet(self, pet: Pet) -> bool:
+        """Определяет, может ли текущий пользователь просматривать питомца."""
         if pet.is_public:
             return True
         return self.is_moderator() or self.is_owner(pet)
 
 
 class PetEditPermissionMixin(ModeratorAccessMixin):
+    """Миксин для ограничения доступа к редактированию питомца."""
+
     def dispatch(self, request, *args, **kwargs):
+        """Проверяет право на редактирование питомца перед обработкой запроса."""
         obj = self.get_object()
         if not self.can_edit_pet(obj):
             raise PermissionDenied
@@ -59,7 +66,10 @@ class PetEditPermissionMixin(ModeratorAccessMixin):
 
 
 class PetDetailPermissionMixin(ModeratorAccessMixin):
+    """Миксин для ограничения доступа к просмотру деталей питомца."""
+
     def dispatch(self, request, *args, **kwargs):
+        """Проверяет право на просмотр питомца перед обработкой запроса."""
         self.object = self.get_object()
         if not self.can_view_pet(self.object):
             raise PermissionDenied
@@ -67,7 +77,10 @@ class PetDetailPermissionMixin(ModeratorAccessMixin):
 
 
 class EventOwnerOrModeratorMixin(ModeratorAccessMixin):
+    """Миксин, ограничивающий доступ к событиям их владельцем или модератором."""
+
     def get_queryset(self):
+        """Возвращает queryset событий с учетом прав текущего пользователя."""
         qs = Event.objects.select_related("pet", "owner").order_by("-event_datetime")
         if self.is_moderator():
             return qs
@@ -75,31 +88,43 @@ class EventOwnerOrModeratorMixin(ModeratorAccessMixin):
 
 
 class PetListView(LoginRequiredMixin, ModeratorAccessMixin, ListView):
+    """Представление списка питомцев текущего пользователя или всех питомцев для модератора."""
+
     model = Pet
     template_name = "pets/pet_list.html"
     context_object_name = "pets"
 
     def get_queryset(self):
+        """
+        Возвращает список питомцев с учетом роли пользователя:
+        - если модератор - возвращает всех питомцев
+        - если пользователь - только питомцев пользователя
+        """
         qs = Pet.objects.select_related("owner").prefetch_related("events").order_by("-created_at")
         if self.is_moderator():
             return qs
         return qs.filter(owner=self.request.user)
 
     def get_context_data(self, **kwargs):
+        """Добавляет в контекст подготовленные карточки питомцев для шаблона."""
         context = super().get_context_data(**kwargs)
         context["pet_cards"] = [build_pet_card_context(pet, self.request.user) for pet in context["pets"]]
         return context
 
 
 class PetDetailView(PetDetailPermissionMixin, DetailView):
+    """Представление страницы с детальной информацией о питомце."""
+
     model = Pet
     template_name = "pets/pet_detail.html"
     context_object_name = "pet"
 
     def get_queryset(self):
+        """Возвращает queryset питомцев с заранее загруженными связанными событиями."""
         return Pet.objects.select_related("owner").prefetch_related("events")
 
     def get_context_data(self, **kwargs):
+        """Добавляет в контекст вычисляемые данные о питомце, его статусе и последних событиях."""
         context = super().get_context_data(**kwargs)
         pet = self.object
         events = pet.events.all().order_by("-event_datetime")[:6]
@@ -118,30 +143,39 @@ class PetDetailView(PetDetailPermissionMixin, DetailView):
 
 
 class PetCreateView(LoginRequiredMixin, CreateView):
+    """Представление для создания нового питомца."""
+
     model = Pet
     form_class = PetForm
     template_name = "pets/pet_form.html"
 
     def form_valid(self, form):
+        """Автоматически назначает текущего пользователя владельцем питомца."""
         form.instance.owner = self.request.user
         return super().form_valid(form)
 
 
 class PetUpdateView(LoginRequiredMixin, PetEditPermissionMixin, UpdateView):
+    """Представление для редактирования питомца."""
+
     model = Pet
     form_class = PetForm
     template_name = "pets/pet_form.html"
 
     def get_queryset(self):
+        """Возвращает queryset питомцев с предзагруженным владельцем."""
         return Pet.objects.select_related("owner")
 
 
 class PetDeleteView(LoginRequiredMixin, PetEditPermissionMixin, DeleteView):
+    """Представление для удаления питомца."""
+
     model = Pet
     template_name = "pets/pet_confirm_delete.html"
     success_url = reverse_lazy("pets:pet_list")
 
     def get_queryset(self):
+        """Возвращает queryset питомцев с предзагруженным владельцем."""
         return Pet.objects.select_related("owner")
 
 
@@ -155,11 +189,14 @@ EVENT_FORM_MAP = {
 
 
 class EventListView(LoginRequiredMixin, EventOwnerOrModeratorMixin, ListView):
+    """Представление списка событий ухода с фильтрацией и сортировкой."""
+
     model = Event
     template_name = "pets/event_list.html"
     context_object_name = "events"
 
     def get_queryset(self):
+        """Фильтрует и сортирует события по параметрам запроса."""
         qs = super().get_queryset()
 
         selected_pet_ids = self.request.GET.getlist("pet")
@@ -181,6 +218,7 @@ class EventListView(LoginRequiredMixin, EventOwnerOrModeratorMixin, ListView):
         return qs
 
     def get_context_data(self, **kwargs):
+        """Добавляет в контекст данные для фильтров, сортировки и отображения строк событий."""
         context = super().get_context_data(**kwargs)
 
         pets_qs = Pet.objects.select_related("owner").order_by("name")
@@ -201,6 +239,8 @@ class EventListView(LoginRequiredMixin, EventOwnerOrModeratorMixin, ListView):
 
 
 class EventDetailView(LoginRequiredMixin, EventOwnerOrModeratorMixin, DetailView):
+    """Представление детальной информации о событии ухода."""
+
     model = Event
     template_name = "pets/event_detail.html"
     context_object_name = "event"
@@ -212,25 +252,38 @@ class EventDetailView(LoginRequiredMixin, EventOwnerOrModeratorMixin, DetailView
 
 
 class EventCreateView(LoginRequiredMixin, ModeratorAccessMixin, CreateView):
+    """Представление для создания события ухода выбранного типа."""
+
     model = Event
     template_name = "pets/event_form.html"
 
     def dispatch(self, request, *args, **kwargs):
+        """
+        Из запроса извлекает тип события, и проверяет, поддерживается ли он.
+        Если тип события отсутствует в карте форм - выбрасывается ошибка 404
+        """
         self.event_type = self.kwargs["event_type"]
         if self.event_type not in EVENT_FORM_MAP:
             raise Http404("Unknown event type")
         return super().dispatch(request, *args, **kwargs)
 
     def get_form_class(self):
+        """В зависимости от типа события - отдаётся соответствующая ему форма."""
         return EVENT_FORM_MAP[self.event_type]
 
     def get_form_kwargs(self):
+        """
+        Из запроса извлекается информация о пользователе,
+        является ли он модератором,
+        записывается в kwargs и передаётся в форму
+        """
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
         kwargs["is_moderator"] = self.is_moderator()
         return kwargs
 
     def get_initial(self):
+        """Заполняет начальные данные формы типом события и питомцем из query-параметров."""
         initial = super().get_initial()
         initial["event_type"] = self.event_type
         pet_id = self.request.GET.get("pet")
@@ -239,30 +292,46 @@ class EventCreateView(LoginRequiredMixin, ModeratorAccessMixin, CreateView):
         return initial
 
     def form_valid(self, form):
+        """
+        Устанавливает владельца события и фиксирует тип события перед сохранением.
+        Для модератора владельцем события становится владелец выбранного питомца.
+        Для обычного пользователя — сам текущий пользователь.
+        """
         form.instance.owner = form.cleaned_data["pet"].owner if self.is_moderator() else self.request.user
         form.instance.event_type = self.event_type
         return super().form_valid(form)
 
 
 class EventUpdateView(LoginRequiredMixin, EventOwnerOrModeratorMixin, UpdateView):
+    """Представление для редактирования существующего события ухода."""
+
     model = Event
     template_name = "pets/event_form.html"
 
     def get_form_class(self):
+        """Возвращает форму в зависимости от типа редактируемого события."""
         return EVENT_FORM_MAP[self.get_object().event_type]
 
     def get_form_kwargs(self):
+        """Передает в форму текущего пользователя и признак роли модератора."""
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
         kwargs["is_moderator"] = self.is_moderator()
         return kwargs
 
     def form_valid(self, form):
+        """
+        Обновляет владельца события перед сохранением.
+        Для модератора владельцем остается владелец выбранного питомца,
+        для обычного пользователя — текущий пользователь.
+        """
         form.instance.owner = form.cleaned_data["pet"].owner if self.is_moderator() else self.request.user
         return super().form_valid(form)
 
 
 class EventDeleteView(LoginRequiredMixin, EventOwnerOrModeratorMixin, DeleteView):
+    """Представление для удаления события ухода."""
+
     model = Event
     template_name = "pets/event_confirm_delete.html"
     success_url = reverse_lazy("pets:event_list")

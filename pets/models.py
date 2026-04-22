@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
-from django.core.validators import MaxValueValidator, MinValueValidator
+
 from users.validators import validate_image_file
 
 
@@ -37,18 +38,20 @@ class Pet(models.Model):
         verbose_name="Владелец",
     )
 
-    name = models.CharField(max_length=100, verbose_name="Имя животного")
+    name = models.CharField(max_length=100, verbose_name="Имя питомца")
 
     animal_type = models.CharField(
         max_length=20,
         choices=AnimalType.choices,
         verbose_name="Тип животного",
     )
+
     species_name = models.CharField(
         max_length=150,
         verbose_name="Вид",
         help_text="Например: Маисовый полоз",
     )
+
     morph = models.CharField(
         max_length=150,
         blank=True,
@@ -72,7 +75,7 @@ class Pet(models.Model):
         blank=True,
         null=True,
         verbose_name="Дата начала владения",
-        help_text="Укажите, когда животное появилось у вас",
+        help_text="Укажите, когда питомец появился у вас",
     )
 
     weight_grams = models.PositiveIntegerField(
@@ -81,6 +84,7 @@ class Pet(models.Model):
         verbose_name="Вес (г)",
         validators=[MinValueValidator(1), MaxValueValidator(200000)],
     )
+
     length_cm = models.PositiveIntegerField(
         blank=True,
         null=True,
@@ -121,7 +125,7 @@ class Pet(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def clean(self):
-        """Проверяет корректность дат."""
+        """Нормализует текстовые поля и проверяет логическую корректность дат."""
         super().clean()
 
         if self.name:
@@ -134,7 +138,7 @@ class Pet(models.Model):
             self.morph = self.morph.strip()
 
         if self.name == "":
-            raise ValidationError({"name": "Имя животного не может быть пустым."})
+            raise ValidationError({"name": "Имя питомца не может быть пустым."})
 
         if self.species_name == "":
             raise ValidationError({"species_name": "Вид не может быть пустым."})
@@ -149,13 +153,15 @@ class Pet(models.Model):
             raise ValidationError({"acquired_date": "Дата начала владения не может быть раньше даты рождения."})
 
     def __str__(self) -> str:
+        """Формирует читаемое строковое представление питомца."""
         return f"{self.name} ({self.species_name})"
 
     def get_absolute_url(self) -> str:
+        """Возвращает URL страницы детального просмотра питомца."""
         return reverse("pets:pet_detail", kwargs={"pk": self.pk})
 
     def save(self, *args, **kwargs):
-        """Сохраняет питомца после полной валидации."""
+        """Запускает полную валидацию модели перед сохранением."""
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -166,7 +172,7 @@ class Pet(models.Model):
 
 
 class Event(models.Model):
-    """Событие, связанное с питомцем."""
+    """Модель события ухода или наблюдения, связанного с конкретным питомцем."""
 
     class EventType(models.TextChoices):
         FEEDING = "feeding", "Кормление"
@@ -186,7 +192,7 @@ class Event(models.Model):
         Pet,
         on_delete=models.CASCADE,
         related_name="events",
-        verbose_name="Животное",
+        verbose_name="Питомец",
     )
 
     event_type = models.CharField(
@@ -241,7 +247,7 @@ class Event(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
-        """Проверяет корректность данных события."""
+        """Проверяет бизнес-правила события и согласованность его полей."""
         super().clean()
 
         if self.title:
@@ -274,7 +280,7 @@ class Event(models.Model):
             raise ValidationError({"event_datetime": "Дата и время события не могут быть в будущем."})
 
     def save(self, *args, **kwargs):
-        """При сохранении измерения обновляем параметры питомца."""
+        """Сохраняет событие и обновляет параметры питомца, если это событие измерения."""
 
         self.full_clean()
         super().save(*args, **kwargs)
@@ -295,6 +301,7 @@ class Event(models.Model):
                 pet.save(update_fields=fields_to_update)
 
     def get_absolute_url(self) -> str:
+        """Возвращает URL страницы детального просмотра события."""
         return reverse("pets:event_detail", kwargs={"pk": self.pk})
 
     class Meta:

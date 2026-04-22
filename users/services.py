@@ -1,12 +1,13 @@
 import secrets
+from datetime import datetime, timedelta
 from typing import Any
 from urllib.parse import urljoin
-from datetime import timedelta
 
 import requests
 from django.conf import settings
-from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.utils import timezone
+from django.utils.html import escape
 
 from pets.models import Event, Pet
 from pets.services import get_next_repeat_datetime, get_pet_shedding_until, pet_can_handle
@@ -21,7 +22,7 @@ def generate_telegram_link_token() -> str:
 
 
 def create_telegram_deep_link_for_user(user: CustomUser) -> str:
-    """Создаёт deep link для привязки Telegram к профилю пользователя."""
+    """Создаёт и сохраняет одноразовый deep link для привязки Telegram к профилю пользователя."""
     token = generate_telegram_link_token()
 
     user.telegram_link_token = token
@@ -44,7 +45,12 @@ def disable_care_notifications(user: CustomUser) -> None:
 
 
 def link_telegram_account_by_token(token: str, chat_id: int) -> CustomUser | None:
-    """Привязывает Telegram chat_id к пользователю по одноразовому токену."""
+    """
+    Привязывает Telegram chat_id к пользователю по одноразовому токену.
+    Проверяет существование токена, его актуальность и отсутствие привязки chat_id
+    к другому пользователю. После успешной привязки очищает токен и включает
+    уведомления об уходе.
+    """
     if not token:
         return None
 
@@ -60,9 +66,8 @@ def link_telegram_account_by_token(token: str, chat_id: int) -> CustomUser | Non
     if CustomUser.objects.filter(telegram_id=chat_id).exclude(pk=user.pk).exists():
         raise ValidationError("Этот Telegram-аккаунт уже привязан к другому профилю.")
 
-    if (
-            user.telegram_link_token_created_at
-            and user.telegram_link_token_created_at < timezone.now() - timedelta(hours=1)
+    if user.telegram_link_token_created_at and user.telegram_link_token_created_at < timezone.now() - timedelta(
+        hours=1
     ):
         raise ValidationError("Ссылка устарела. Запросите новую.")
 
@@ -89,12 +94,14 @@ def build_telegram_api_url(method: str) -> str:
 
 
 def send_telegram_message(chat_id: int, text: str) -> dict[str, Any]:
-    """Отправляет текстовое сообщение в Telegram."""
+    """Отправляет HTML-сообщение в Telegram и возвращает ответ Telegram Bot API."""
     response = requests.post(
         build_telegram_api_url("sendMessage"),
         json={
             "chat_id": chat_id,
             "text": text,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": True,
         },
         timeout=15,
     )
@@ -103,7 +110,7 @@ def send_telegram_message(chat_id: int, text: str) -> dict[str, Any]:
 
 
 def get_telegram_updates(offset: int | None = None) -> list[dict[str, Any]]:
-    """Получает обновления от Telegram Bot API."""
+    """Получает список обновлений из Telegram Bot API с учётом смещения offset."""
     payload: dict[str, Any] = {
         "timeout": 30,
     }
@@ -120,11 +127,23 @@ def get_telegram_updates(offset: int | None = None) -> list[dict[str, Any]]:
     return data.get("result", [])
 
 
-def get_pet_tasks_for_today(pet: Pet, user) -> list[str]:
-    """Возвращает список дел на сегодня по питомцу."""
+def get_pet_tasks_for_today(
+    pet: Pet,
+    user: CustomUser,
+    *,
+    local_now: datetime | None = None,
+) -> list[str]:
+    """
+    Возвращает список задач на сегодня по питомцу в часовом поясе пользователя.
+    В список всегда добавляется задача по смене воды. Дополнительно учитываются
+    повторяющиеся события ухода и кастомные события, срок которых наступает
+    в текущую локальную дату пользователя.
+    """
     tasks: list[str] = ["поменяй воду"]
 
-    local_now = get_user_local_now(user)
+    if local_now is None:
+        local_now = get_user_local_now(user)
+
     today = local_now.date()
     user_tz = local_now.tzinfo
 
@@ -172,43 +191,148 @@ def get_pet_tasks_for_today(pet: Pet, user) -> list[str]:
     return tasks
 
 
+PET_TELEGRAM_EMOJI: dict[str, str] = {
+    Pet.AnimalType.SNAKE: "🐍",
+    Pet.AnimalType.LIZARD: "🦎",
+    Pet.AnimalType.TURTLE: "🐢",
+    Pet.AnimalType.FROG: "🐸",
+    Pet.AnimalType.SPIDER: "🕷️",
+    Pet.AnimalType.SCORPION: "🦂",
+    Pet.AnimalType.OTHER: "🐾",
+}
+
+TELEGRAM_TASK_LABELS: dict[str, str] = {
+    "поменяй воду": "💧 Поменяй воду",
+    "покормить": "🍽️ Покормить",
+    "сделать уборку": "🧹 Сделать уборку",
+    "измерить и взвесить": "📏 Измерить и взвесить",
+}
+
+
+def _capitalize_first(text: str) -> str:
+    """Возвращает строку с заглавной первой буквой без изменения остального текста."""
+    cleaned = text.strip()
+    if not cleaned:
+        return ""
+    return cleaned[0].upper() + cleaned[1:]
+
+
+def _get_pet_telegram_emoji(pet: Pet) -> str:
+    """Подбирает эмодзи для питомца по его типу."""
+    return PET_TELEGRAM_EMOJI.get(pet.animal_type, "🐾")
+
+
+def _format_telegram_task(task: str) -> str:
+    """Преобразует задачу в более читаемый формат для Telegram."""
+    cleaned = task.strip()
+    if not cleaned:
+        return "📝 Действие"
+
+    mapped = TELEGRAM_TASK_LABELS.get(cleaned.lower())
+    if mapped:
+        return mapped
+
+    return f"📝 {_capitalize_first(cleaned)}"
+
+
+def build_pet_notification_block(
+    pet: Pet,
+    user: CustomUser,
+    *,
+    local_now: datetime | None = None,
+) -> str:
+    """
+    Собирает Telegram-блок с кратким статусом питомца и задачами на сегодня.
+    """
+    if local_now is None:
+        local_now = get_user_local_now(user)
+
+    user_tz = local_now.tzinfo
+
+    lines: list[str] = [
+        f"{_get_pet_telegram_emoji(pet)} <b>{escape(pet.name)}</b>",
+    ]
+
+    if pet_can_handle(pet):
+        lines.append("✅ Можно брать на руки")
+    else:
+        lines.append("⛔ Сейчас лучше не трогать")
+
+    shedding_until = get_pet_shedding_until(pet)
+    if shedding_until:
+        local_shedding_until = shedding_until.astimezone(user_tz)
+        lines.append(f"🪶 Линька до: {local_shedding_until.strftime('%d.%m.%Y %H:%M')}")
+
+    tasks = get_pet_tasks_for_today(pet, user, local_now=local_now)
+    if tasks:
+        lines.extend(
+            [
+                "",
+                "📌 <b>Важные дела на сегодня:</b>",
+            ]
+        )
+        lines.extend(f"• {escape(_format_telegram_task(task))}" for task in tasks)
+    else:
+        lines.extend(
+            [
+                "",
+                "✨ На сегодня важных дел нет.",
+            ]
+        )
+
+    return "\n".join(lines)
+
+
 def build_daily_care_notification_text(user: CustomUser) -> str:
-    """Собирает ежедневное сообщение об уходе для пользователя."""
-    lines: list[str] = [f"Приветствую, {user.first_name or user.email}!", ""]
+    """Собирает ежедневное Telegram-сообщение об уходе за питомцами пользователя."""
+    local_now = get_user_local_now(user)
 
-    pets = user.pets.prefetch_related("events").order_by("name")
-    user_tz = get_user_local_now(user).tzinfo
+    user_name = escape(user.first_name or user.email)
+    events_url = urljoin(settings.SITE_URL.rstrip("/") + "/", "pets/events/")
 
-    for pet in pets:
-        lines.append(pet.name)
+    pets = list(user.pets.prefetch_related("events").order_by("name"))
 
-        if pet_can_handle(pet):
-            lines.append("можно брать на руки")
-        else:
-            lines.append("нельзя брать на руки")
+    lines: list[str] = [
+        f"Доброе утро, <b>{user_name}</b>! ☀️",
+        "",
+        f"Сегодня {local_now.strftime('%d.%m.%Y')}. Вот напоминание по уходу за питомцами:",
+        "",
+    ]
 
-        shedding_until = get_pet_shedding_until(pet)
-        if shedding_until:
-            local_shedding_until = shedding_until.astimezone(user_tz)
-            lines.append(f"линька до {local_shedding_until.strftime('%d.%m.%Y %H:%M')}")
+    if not pets:
+        lines.extend(
+            [
+                "У вас пока нет питомцев в системе.",
+                "",
+                "🔗 <b>Добавить питомца и события:</b>",
+                events_url,
+            ]
+        )
+        return "\n".join(lines)
 
-        tasks = get_pet_tasks_for_today(pet, user)
-        if tasks:
-            lines.append("")
-            lines.append("Важные дела на сегодня:")
-            for task in tasks:
-                lines.append(f"- {task}")
+    for index, pet in enumerate(pets):
+        lines.append(build_pet_notification_block(pet, user, local_now=local_now))
 
-        lines.append("")
+        if index != len(pets) - 1:
+            lines.extend(["", "──────────", ""])
 
-    lines.append("Если есть событие по уходу за питомцем, добавь его на странице:")
-    lines.append(urljoin(settings.SITE_URL.rstrip("/") + "/", "pets/events/"))
+    lines.extend(
+        [
+            "",
+            "🔗 <b>Добавить событие по уходу:</b>",
+            events_url,
+        ]
+    )
 
     return "\n".join(lines)
 
 
 def should_send_daily_notification_now(user: CustomUser) -> bool:
-    """Проверяет, нужно ли отправить пользователю ежедневное уведомление сейчас."""
+    """
+    Проверяет, нужно ли отправить пользователю ежедневное уведомление в текущий момент.
+    Учитывает настройки уведомлений, наличие Telegram-привязки, локальное время
+    пользователя и факт уже выполненной отправки за текущую дату.
+    """
     if not user.care_notifications_enabled:
         return False
 
@@ -217,16 +341,20 @@ def should_send_daily_notification_now(user: CustomUser) -> bool:
 
     local_now = get_user_local_now(user)
 
-    if local_now.hour != 7:
+    target_hour = settings.CARE_NOTIFICATIONS_HOUR
+    target_minute = settings.CARE_NOTIFICATIONS_MINUTE
+
+    if local_now.hour != target_hour:
         return False
 
-    if local_now.minute >= 15:
+    if local_now.minute < target_minute or local_now.minute >= target_minute + 15:
         return False
 
     if user.last_care_notification_date == local_now.date():
         return False
 
     return True
+
 
 def unlink_telegram_account(user: CustomUser) -> None:
     """Отвязывает Telegram от пользователя и выключает уведомления."""
@@ -246,6 +374,7 @@ def unlink_telegram_account(user: CustomUser) -> None:
             "last_care_notification_date",
         ]
     )
+
 
 def build_telegram_welcome_text(user: CustomUser) -> str:
     """Собирает приветственное сообщение после подключения Telegram."""

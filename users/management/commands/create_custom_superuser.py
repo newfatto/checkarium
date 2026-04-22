@@ -14,10 +14,6 @@ class Command(BaseCommand):
     def handle(self, *args: tuple, **options: dict) -> None:
         """
         Запустить команду создания суперпользователя.
-
-        :param args: Позиционные аргументы команды.
-        :param options: Именованные аргументы команды.
-        :return: None.
         """
         email = input("Введите email: ").strip()
         first_name = input("Введите имя: ").strip()

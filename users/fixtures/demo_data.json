@@ -3,26 +3,21 @@
     "model": "users.customuser",
     "pk": 1001,
     "fields": {
-      "password": "pbkdf2_sha256$1000000$45439bcd880cbedd$9op5W71eaRY/SLp9FClPwUkppMt/sD8kBCyEECO7xZs=",
-      "last_login": null,
+      "password": "pbkdf2_sha256$1200000$TmKAuy46FoqrJ20fFtXslH$mdNr3lxhuZFSu68rIhgn8zmc+N9UD29l4xGu1WPWmMQ=",
       "is_superuser": false,
-      "email": "user@user.user",
-      "first_name": "Катя",
-      "last_name": "Тестова",
-      "city": "Москва",
-      "phone_number": "",
-      "avatar": "",
-      "bio": "Тестовый владелец №1",
-      "telegram_id": null,
-      "telegram_link_token": null,
-      "telegram_link_token_created_at": null,
-      "telegram_linked_at": null,
-      "care_notifications_enabled": false,
-      "last_care_notification_date": null,
-      "time_zone": "UTC+03:00",
       "is_staff": false,
       "is_active": true,
       "date_joined": "2026-01-10T10:00:00Z",
+      "email": "user@user.user",
+      "first_name": "Екатерина",
+      "last_name": "Тестова",
+      "city": "Москва",
+      "phone_number": "",
+      "avatar": "demo/users/user_owner_1.jpg",
+      "bio": "Тестовый владелец №1",
+      "telegram_id": null,
+      "care_notifications_enabled": true,
+      "time_zone": "UTC+03:00",
       "groups": [],
       "user_permissions": []
     }
@@ -31,26 +26,21 @@
     "model": "users.customuser",
     "pk": 1002,
     "fields": {
-      "password": "pbkdf2_sha256$1000000$45439bcd880cbedd$9op5W71eaRY/SLp9FClPwUkppMt/sD8kBCyEECO7xZs=",
-      "last_login": null,
+      "password": "pbkdf2_sha256$1200000$m7IEN3uN6k0Po5qUyHI74l$awHp9fRLr9NZiN1huX1/Vwe8PE0Z4gAIC4gylWumqj8=",
       "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-12T11:00:00Z",
       "email": "user1@user.user",
       "first_name": "Анна",
       "last_name": "Иванова",
       "city": "Санкт-Петербург",
-      "phone_number": "",
+      "phone_number": "+7 777 777 777 777",
       "avatar": "",
       "bio": "Тестовый владелец №2",
       "telegram_id": null,
-      "telegram_link_token": null,
-      "telegram_link_token_created_at": null,
-      "telegram_linked_at": null,
       "care_notifications_enabled": true,
-      "last_care_notification_date": null,
-      "time_zone": "UTC+03:00",
-      "is_staff": false,
-      "is_active": true,
-      "date_joined": "2026-01-12T11:00:00Z",
+      "time_zone": "UTC-12:00",
       "groups": [],
       "user_permissions": []
     }
@@ -59,9 +49,11 @@
     "model": "users.customuser",
     "pk": 1003,
     "fields": {
-      "password": "pbkdf2_sha256$1000000$45439bcd880cbedd$9op5W71eaRY/SLp9FClPwUkppMt/sD8kBCyEECO7xZs=",
-      "last_login": null,
+      "password": "pbkdf2_sha256$1200000$PsFTqn2fuUmmZtOW4u1FLV$M5yLN0YrQhFYOPXzFSW9+09HLwYw6qtL6yPSc6N5jpg=",
       "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-15T09:30:00Z",
       "email": "user2@user.user",
       "first_name": "Олег",
       "last_name": "Смирнов",
@@ -70,15 +62,8 @@
       "avatar": "",
       "bio": "Тестовый владелец №3",
       "telegram_id": null,
-      "telegram_link_token": null,
-      "telegram_link_token_created_at": null,
-      "telegram_linked_at": null,
       "care_notifications_enabled": false,
-      "last_care_notification_date": null,
-      "time_zone": "UTC+02:00",
-      "is_staff": false,
-      "is_active": true,
-      "date_joined": "2026-01-15T09:30:00Z",
+      "time_zone": "Europe/Berlin",
       "groups": [],
       "user_permissions": []
     }
@@ -87,9 +72,11 @@
     "model": "users.customuser",
     "pk": 1004,
     "fields": {
-      "password": "pbkdf2_sha256$1000000$2887cc4711787819$XZA5nYLB0RHfcrtAsDrh+P+bDy4X1aF2QFwNrKtHStM=",
-      "last_login": null,
+      "password": "pbkdf2_sha256$1200000$0Jikoleu7estI0zU5i2OSm$5To+fPDqgIhO5QxyW+KGzMvpVSgUawb6lYTp4F6hItI=",
       "is_superuser": false,
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-01-05T08:00:00Z",
       "email": "moderator@checkarium.local",
       "first_name": "Мария",
       "last_name": "Модератор",
@@ -98,15 +85,31 @@
       "avatar": "",
       "bio": "Тестовый модератор",
       "telegram_id": null,
-      "telegram_link_token": null,
-      "telegram_link_token_created_at": null,
-      "telegram_linked_at": null,
       "care_notifications_enabled": false,
-      "last_care_notification_date": null,
-      "time_zone": "UTC+03:00",
-      "is_staff": true,
+      "time_zone": "Europe/Moscow",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.customuser",
+    "pk": 1005,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$3l9Vun9WDipHWVyIzdgPk4$irgF2jKP24nliAZRS8TmEGKCmAU3xuH9mAkLiIVhNHY=",
+      "is_superuser": false,
+      "is_staff": false,
       "is_active": true,
-      "date_joined": "2026-01-05T08:00:00Z",
+      "date_joined": "2026-04-20T13:32:29.776Z",
+      "email": "test@test.com",
+      "first_name": "Тест",
+      "last_name": "",
+      "city": "",
+      "phone_number": "09991234567",
+      "avatar": "",
+      "bio": "",
+      "telegram_id": null,
+      "care_notifications_enabled": false,
+      "time_zone": "UTC-04:00",
       "groups": [],
       "user_permissions": []
     }
@@ -125,13 +128,13 @@
       "acquired_date": "2024-10-10",
       "weight_grams": 38,
       "length_cm": 55,
-      "photo": "",
+      "photo": "demo/pets/cornsnake_kukuruza.jpg",
       "feeding_notes": "Мышь-голыш",
       "notes": "Активная, спокойная.",
       "status": "active",
       "is_public": true,
       "created_at": "2026-01-10T12:00:00Z",
-      "updated_at": "2026-01-10T12:00:00Z"
+      "updated_at": "2026-04-20T09:39:24.433Z"
     }
   },
   {
@@ -148,13 +151,13 @@
       "acquired_date": "2023-08-20",
       "weight_grams": 54,
       "length_cm": 22,
-      "photo": "",
+      "photo": "demo/pets/gecko_tochka.jpg",
       "feeding_notes": "Сверчки, тараканы",
       "notes": "Непубличный питомец для проверки прав.",
       "status": "active",
       "is_public": false,
       "created_at": "2026-01-11T12:00:00Z",
-      "updated_at": "2026-01-11T12:00:00Z"
+      "updated_at": "2026-04-20T09:34:08.227Z"
     }
   },
   {
@@ -164,20 +167,20 @@
       "owner": 1002,
       "name": "Пиксель",
       "animal_type": "frog",
-      "species_name": "Пятнистая квакша",
-      "morph": "Зелёная",
+      "species_name": "Квакша",
+      "morph": "Красноглазая",
       "sex": "unknown",
       "birth_date": null,
       "acquired_date": "2025-03-01",
       "weight_grams": 18,
       "length_cm": 6,
-      "photo": "",
+      "photo": "demo/pets/frog_pixel.jpg",
       "feeding_notes": "Мелкие сверчки",
       "notes": "Публичный питомец второго владельца.",
       "status": "active",
       "is_public": true,
       "created_at": "2026-01-12T12:00:00Z",
-      "updated_at": "2026-01-12T12:00:00Z"
+      "updated_at": "2026-04-20T09:43:27.816Z"
     }
   },
   {
@@ -194,13 +197,13 @@
       "acquired_date": "2020-06-15",
       "weight_grams": 410,
       "length_cm": 18,
-      "photo": "",
+      "photo": "demo/pets/turtle_tortilla.jpg",
       "feeding_notes": "Смесь для черепах, зелень",
       "notes": "Архивный питомец.",
       "status": "archived",
       "is_public": true,
       "created_at": "2026-01-13T12:00:00Z",
-      "updated_at": "2026-01-13T12:00:00Z"
+      "updated_at": "2026-04-20T09:41:00.456Z"
     }
   },
   {
@@ -217,13 +220,13 @@
       "acquired_date": "2025-07-07",
       "weight_grams": null,
       "length_cm": null,
-      "photo": "",
+      "photo": "demo/pets/spider_arahna.jpg",
       "feeding_notes": "Кормовые насекомые",
       "notes": "Публичный паук.",
       "status": "active",
       "is_public": true,
       "created_at": "2026-01-14T12:00:00Z",
-      "updated_at": "2026-01-14T12:00:00Z"
+      "updated_at": "2026-04-20T09:49:50.113Z"
     }
   },
   {
@@ -240,13 +243,36 @@
       "acquired_date": "2025-09-20",
       "weight_grams": null,
       "length_cm": null,
-      "photo": "",
+      "photo": "demo/pets/scorpion_saturn.jpg",
       "feeding_notes": "Тараканы",
       "notes": "Передан другому владельцу.",
       "status": "rehomed",
       "is_public": false,
       "created_at": "2026-01-15T12:00:00Z",
-      "updated_at": "2026-01-15T12:00:00Z"
+      "updated_at": "2026-04-20T09:48:40.631Z"
+    }
+  },
+  {
+    "model": "pets.pet",
+    "pk": 2007,
+    "fields": {
+      "owner": 1001,
+      "name": "Сладкая Булочка",
+      "animal_type": "snake",
+      "species_name": "Python regius",
+      "morph": "Banana Super Pastel",
+      "sex": "female",
+      "birth_date": "2025-01-06",
+      "acquired_date": "2025-10-10",
+      "weight_grams": 223,
+      "length_cm": 92,
+      "photo": "demo/pets/python.jpg",
+      "feeding_notes": "Крысёныш, мышь",
+      "notes": "Красавица моя.",
+      "status": "active",
+      "is_public": true,
+      "created_at": "2026-04-20T10:12:16.298Z",
+      "updated_at": "2026-04-20T10:14:43.956Z"
     }
   }
 ]

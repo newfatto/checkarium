@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView, LogoutView
@@ -28,11 +29,7 @@ class OnlyOwnerMixin(UserPassesTestMixin):
     """Миксин, разрешающий доступ только владельцу профиля."""
 
     def test_func(self) -> bool:
-        """
-        Проверить, что пользователь работает со своим профилем.
-
-        :return: True, если пользователь владелец объекта.
-        """
+        """Проверяет, что пользователь работает со своим профилем."""
         return self.request.user == self.get_object()
 
 
@@ -53,11 +50,7 @@ class CustomLoginView(LoginView):
     redirect_authenticated_user = True
 
     def get_success_url(self) -> str:
-        """
-        Вернуть URL для перенаправления после успешного входа.
-
-        :return: URL профиля текущего пользователя.
-        """
+        """Возвращает URL для перенаправления после успешного входа."""
         return reverse_lazy("users:profile_detail", kwargs={"pk": self.request.user.pk})
 
 
@@ -75,6 +68,7 @@ class ProfileDetailView(LoginRequiredMixin, OnlyOwnerMixin, DetailView):
     context_object_name = "profile_user"
 
     def get_context_data(self, **kwargs):
+        """Добавляет в контекст карточки питомцев, события и время ежедневных уведомлений."""
         context = super().get_context_data(**kwargs)
         profile_user = self.get_object()
 
@@ -83,6 +77,9 @@ class ProfileDetailView(LoginRequiredMixin, OnlyOwnerMixin, DetailView):
 
         context["profile_pet_cards"] = [build_pet_card_context(pet, self.request.user) for pet in latest_pets]
         context["profile_event_rows"] = [build_event_row_context(event) for event in latest_events]
+        context["care_notifications_time"] = (
+            f"{settings.CARE_NOTIFICATIONS_HOUR:02d}:{settings.CARE_NOTIFICATIONS_MINUTE:02d}"
+        )
         return context
 
 
@@ -95,11 +92,7 @@ class ProfileUpdateView(LoginRequiredMixin, OnlyOwnerMixin, UpdateView):
     context_object_name = "profile_user"
 
     def get_success_url(self) -> str:
-        """
-        Вернуть URL после успешного обновления профиля.
-
-        :return: URL страницы профиля.
-        """
+        """Возвращает URL страницы профиля после успешного обновления."""
         return reverse_lazy("users:profile_detail", kwargs={"pk": self.object.pk})
 
 
@@ -112,6 +105,7 @@ class ProfileDeleteView(LoginRequiredMixin, OnlyOwnerMixin, DeleteView):
     context_object_name = "profile_user"
 
     def get_context_data(self, **kwargs):
+        """Добавляет в контекст карточки питомцев и последние события пользователя."""
         context = super().get_context_data(**kwargs)
         profile_user = self.get_object()
 
@@ -127,6 +121,7 @@ class TelegramConnectView(LoginRequiredMixin, View):
     """Создаёт deep link для привязки Telegram и перенаправляет пользователя в бота."""
 
     def get(self, request: HttpRequest, pk: int) -> HttpResponse:
+        """Проверяет права доступа, создаёт ссылку привязки и выполняет редирект в Telegram."""
         user = get_object_or_404(CustomUser, pk=pk)
 
         if request.user != user:
@@ -141,9 +136,10 @@ class TelegramConnectView(LoginRequiredMixin, View):
 
 
 class TelegramDisableView(LoginRequiredMixin, View):
-    """Выключает уведомления об уходе."""
+    """Выключает уведомления об уходе для пользователя."""
 
     def post(self, request: HttpRequest, pk: int) -> HttpResponse:
+        """Проверяет права доступа, выключает уведомления и возвращает пользователя в профиль."""
         user = get_object_or_404(CustomUser, pk=pk)
 
         if request.user != user:
@@ -155,9 +151,10 @@ class TelegramDisableView(LoginRequiredMixin, View):
 
 
 class TelegramEnableView(LoginRequiredMixin, View):
-    """Включает уведомления об уходе для уже привязанного Telegram."""
+    """Включает уведомления об уходе для уже привязанного Telegram-аккаунта."""
 
     def post(self, request: HttpRequest, pk: int) -> HttpResponse:
+        """Проверяет привязку Telegram, включает уведомления и возвращает пользователя в профиль."""
         user = get_object_or_404(CustomUser, pk=pk)
 
         if request.user != user:
@@ -173,9 +170,10 @@ class TelegramEnableView(LoginRequiredMixin, View):
 
 
 class TelegramUnlinkView(LoginRequiredMixin, View):
-    """Отвязывает Telegram-аккаунт пользователя."""
+    """Отвязывает Telegram-аккаунт пользователя и выключает уведомления."""
 
     def post(self, request: HttpRequest, pk: int) -> HttpResponse:
+        """Проверяет права доступа, отвязывает Telegram и возвращает пользователя в профиль."""
         user = get_object_or_404(CustomUser, pk=pk)
 
         if request.user != user:

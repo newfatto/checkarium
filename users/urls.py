@@ -10,7 +10,8 @@ from .views import (
     RegisterView,
     TelegramConnectView,
     TelegramDisableView,
-    TelegramEnableView, TelegramUnlinkView,
+    TelegramEnableView,
+    TelegramUnlinkView,
 )
 
 app_name = UsersConfig.name

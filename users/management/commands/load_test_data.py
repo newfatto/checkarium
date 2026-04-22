@@ -10,56 +10,60 @@ from users.models import CustomUser
 
 
 class Command(BaseCommand):
-    """Загружает фикстуру с тестовыми пользователями и питомцами и создаёт тестовые события."""
+    """Загружает фикстуру с демо-пользователями и питомцами и создаёт демо-события."""
 
-    help = "Быстро заполняет базу тестовыми данными для Checkarium."
+    help = "Быстро заполняет базу демо-данными для Checkarium."
 
-    fixture_name = "test_seed_users_and_pets"
+    fixture_name = "demo_data"
     moderator_group_name = "Moderators"
 
-    demo_emails = (
-        "user@user.user",
-        "user1@user.user",
-        "user2@user.user",
-        "moderator@checkarium.local",
-    )
+    demo_credentials = {
+        "user@user.user": "Testpass123!",
+        "user1@user.user": "Testpass123!",
+        "user2@user.user": "Testpass123!",
+        "test@test.com": "Testpass123!",
+        "moderator@checkarium.local": "Moderator123!",
+    }
+
+    demo_emails = tuple(demo_credentials.keys())
+    moderator_emails = ("moderator@checkarium.local",)
 
     def add_arguments(self, parser) -> None:
         """Добавляет аргументы management-команды."""
         parser.add_argument(
             "--reset",
             action="store_true",
-            help="Удалить старые тестовые данные перед повторной загрузкой.",
+            help="Удалить старые демо-данные перед повторной загрузкой.",
         )
 
     @transaction.atomic
     def handle(self, *args, **options) -> None:
-        """Запускает загрузку тестовых данных."""
+        """Запускает загрузку демо-данных."""
         if options["reset"]:
             self._reset_demo_data()
 
         self._load_fixture_if_needed()
+        self._set_demo_passwords()
         self._setup_moderator_group()
         self._rebuild_demo_events()
 
-        self.stdout.write(self.style.SUCCESS("Тестовые данные успешно загружены."))
+        self.stdout.write(self.style.SUCCESS("Демо-данные успешно загружены."))
         self.stdout.write("")
         self.stdout.write("Тестовые аккаунты:")
-        self.stdout.write("  user@user.user / Testpass123!")
-        self.stdout.write("  user1@user.user / Testpass123!")
-        self.stdout.write("  user2@user.user / Testpass123!")
-        self.stdout.write("  moderator@checkarium.local / Moderator123!")
+        for email, password in self.demo_credentials.items():
+            self.stdout.write(f"  {email} / {password}")
 
     def _reset_demo_data(self) -> None:
-        """Удаляет старые тестовые данные."""
+        """Удаляет старые демо-данные."""
         CustomUser.objects.filter(email__in=self.demo_emails).delete()
-        self.stdout.write("Старые тестовые данные удалены.")
+        self.stdout.write("Старые демо-данные удалены.")
 
     def _load_fixture_if_needed(self) -> None:
-        """Загружает фикстуру, если тестовых пользователей ещё нет."""
+        """Загружает фикстуру, если демо-пользователи ещё не созданы."""
         existing_count = CustomUser.objects.filter(email__in=self.demo_emails).count()
+
         if existing_count == len(self.demo_emails):
-            self.stdout.write("Фикстура уже загружена, пользователи существуют.")
+            self.stdout.write("Фикстура уже загружена, демо-пользователи существуют.")
             return
 
         if existing_count:
@@ -68,30 +72,55 @@ class Command(BaseCommand):
         call_command("loaddata", self.fixture_name, verbosity=0)
         self.stdout.write(f"Фикстура '{self.fixture_name}' загружена.")
 
+    def _set_demo_passwords(self) -> None:
+        """Проставляет известные пароли демо-пользователям поверх хэшей из фикстуры."""
+        for email, password in self.demo_credentials.items():
+            user = CustomUser.objects.get(email=email)
+            user.set_password(password)
+            user.save(update_fields=["password"])
+
+        self.stdout.write("Пароли демо-пользователей обновлены.")
+
     def _setup_moderator_group(self) -> None:
-        """Создаёт группу модераторов и добавляет в неё тестового модератора."""
+        """Создаёт группу модераторов и добавляет в неё демо-модераторов."""
         moderator_group, _ = Group.objects.get_or_create(name=self.moderator_group_name)
-        moderator = CustomUser.objects.get(email="moderator@checkarium.local")
-        moderator.groups.add(moderator_group)
+
+        moderators = CustomUser.objects.filter(email__in=self.moderator_emails)
+        for moderator in moderators:
+            moderator.groups.add(moderator_group)
+
         self.stdout.write("Группа Moderators настроена.")
 
     def _rebuild_demo_events(self) -> None:
-        """Удаляет старые события тестовых питомцев и создаёт новые, привязанные к текущей дате."""
+        """Удаляет старые события демо-питомцев и создаёт новые, привязанные к текущей дате."""
         pets = Pet.objects.filter(owner__email__in=self.demo_emails)
         Event.objects.filter(pet__in=pets).delete()
 
         now = timezone.now().replace(second=0, microsecond=0)
-
         pet_map = {pet.name: pet for pet in pets.select_related("owner")}
 
-        self._seed_corn_snake_events(pet_map["Кукуруза"], now)
-        self._seed_gecko_events(pet_map["Точка"], now)
-        self._seed_frog_events(pet_map["Пиксель"], now)
-        self._seed_turtle_events(pet_map["Тортилла"], now)
-        self._seed_spider_events(pet_map["Арахна"], now)
-        self._seed_scorpion_events(pet_map["Сатурн"], now)
+        if "Кукуруза" in pet_map:
+            self._seed_corn_snake_events(pet_map["Кукуруза"], now)
 
-        self.stdout.write("Тестовые события созданы.")
+        if "Точка" in pet_map:
+            self._seed_gecko_events(pet_map["Точка"], now)
+
+        if "Пиксель" in pet_map:
+            self._seed_frog_events(pet_map["Пиксель"], now)
+
+        if "Тортилла" in pet_map:
+            self._seed_turtle_events(pet_map["Тортилла"], now)
+
+        if "Арахна" in pet_map:
+            self._seed_spider_events(pet_map["Арахна"], now)
+
+        if "Сатурн" in pet_map:
+            self._seed_scorpion_events(pet_map["Сатурн"], now)
+
+        if "Сладкая Булочка" in pet_map:
+            self._seed_ball_python_events(pet_map["Сладкая Булочка"], now)
+
+        self.stdout.write("Демо-события созданы.")
 
     def _create_event(
         self,
@@ -104,7 +133,7 @@ class Command(BaseCommand):
         no_handling_days: int | None = None,
         title: str = "",
         weight_grams: int | None = None,
-        length_cm: float | None = None,
+        length_cm: int | None = None,
     ) -> Event:
         """Создаёт одно событие для питомца."""
         return Event.objects.create(
@@ -258,5 +287,48 @@ class Command(BaseCommand):
             event_type=Event.EventType.CUSTOM,
             dt=now - timedelta(days=25),
             title="Передача",
-            comment="Животное передано другому владельцу.",
+            comment="Питомец передан другому владельцу.",
+        )
+
+    def _seed_ball_python_events(self, pet: Pet, now) -> None:
+        """Создаёт события для Сладкой Булочки по данным из dump-файла."""
+        self._create_event(
+            pet=pet,
+            event_type=Event.EventType.CUSTOM,
+            dt=now - timedelta(days=1, hours=3),
+            title="Поездка",
+            comment="Съездили на фотосессию, ждём фото",
+        )
+        self._create_event(
+            pet=pet,
+            event_type=Event.EventType.MEASUREMENT,
+            dt=now - timedelta(hours=1, minutes=20),
+            weight_grams=222,
+            length_cm=91,
+            repeat_after_days=30,
+            comment="",
+        )
+        self._create_event(
+            pet=pet,
+            event_type=Event.EventType.MEASUREMENT,
+            dt=now - timedelta(hours=1),
+            weight_grams=223,
+            length_cm=92,
+            repeat_after_days=15,
+            comment="",
+        )
+        self._create_event(
+            pet=pet,
+            event_type=Event.EventType.CLEANING,
+            dt=now - timedelta(minutes=20),
+            repeat_after_days=15,
+            comment="",
+        )
+        self._create_event(
+            pet=pet,
+            event_type=Event.EventType.FEEDING,
+            dt=now - timedelta(minutes=5),
+            repeat_after_days=7,
+            no_handling_days=3,
+            comment="Съела мышь",
         )

@@ -1,10 +1,10 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
+from django.core.validators import EmailValidator
 from django.db import models
 from django.urls import reverse
-from django.core.exceptions import ValidationError
 
-from django.core.validators import EmailValidator
 from .validators import (
     validate_image_file,
     validate_person_name,
@@ -24,14 +24,7 @@ class CustomUserManager(BaseUserManager):
         password: str | None = None,
         **extra_fields: object,
     ) -> "CustomUser":
-        """
-        Создать и сохранить обычного пользователя.
-
-        :param email: Email пользователя.
-        :param password: Пароль пользователя.
-        :param extra_fields: Дополнительные поля модели.
-        :return: Экземпляр CustomUser.
-        """
+        """Создать и сохранить обычного пользователя."""
         if not email:
             raise ValueError("У пользователя должен быть указан email.")
 
@@ -47,14 +40,7 @@ class CustomUserManager(BaseUserManager):
         password: str | None = None,
         **extra_fields: object,
     ) -> "CustomUser":
-        """
-        Создать и сохранить суперпользователя.
-
-        :param email: Email суперпользователя.
-        :param password: Пароль суперпользователя.
-        :param extra_fields: Дополнительные поля модели.
-        :return: Экземпляр CustomUser.
-        """
+        """Создать и сохранить суперпользователя."""
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
@@ -78,11 +64,13 @@ class CustomUser(AbstractUser):
         validators=[EmailValidator(message="Введите корректный email.")],
         verbose_name="Email",
     )
+
     first_name = models.CharField(
         max_length=150,
         verbose_name="Имя",
         validators=[validate_person_name],
     )
+
     last_name = models.CharField(
         max_length=150,
         blank=True,
@@ -94,12 +82,14 @@ class CustomUser(AbstractUser):
         blank=True,
         verbose_name="Город",
     )
+
     phone_number = models.CharField(
         max_length=20,
         blank=True,
         verbose_name="Телефон",
         validators=[validate_phone_number],
     )
+
     avatar = models.ImageField(
         upload_to="users/avatars/",
         blank=True,
@@ -107,6 +97,7 @@ class CustomUser(AbstractUser):
         verbose_name="Аватар",
         validators=[validate_image_file],
     )
+
     bio = models.TextField(
         blank=True,
         verbose_name="О себе",
@@ -177,9 +168,9 @@ class CustomUser(AbstractUser):
             self.phone_number = self.phone_number.strip()
 
         if self.care_notifications_enabled and not self.telegram_id:
-            raise ValidationError({
-                "care_notifications_enabled": "Нельзя включить уведомления без привязанного Telegram."
-            })
+            raise ValidationError(
+                {"care_notifications_enabled": "Нельзя включить уведомления без привязанного Telegram."}
+            )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS: list[str] = []
@@ -187,19 +178,11 @@ class CustomUser(AbstractUser):
     objects = CustomUserManager()
 
     def __str__(self) -> str:
-        """
-        Вернуть строковое представление пользователя.
-
-        :return: Email пользователя.
-        """
+        """Возвращает строковое представление пользователя."""
         return self.email
 
     def get_absolute_url(self) -> str:
-        """
-        Вернуть URL страницы профиля пользователя.
-
-        :return: URL профиля.
-        """
+        """Возвращает URL страницы профиля пользователя."""
         return reverse("users:profile_detail", kwargs={"pk": self.pk})
 
     class Meta:

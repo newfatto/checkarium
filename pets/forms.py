@@ -9,6 +9,8 @@ from .models import Event, Pet
 
 
 class PetForm(forms.ModelForm):
+    """Форма для создания и редактирования питомца"""
+
     class Meta:
         model = Pet
         fields = [
@@ -75,6 +77,7 @@ class PetForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        """Устанавливает формат дат для полей даты рождения и появления у владельца"""
         super().__init__(*args, **kwargs)
         self.fields["birth_date"].input_formats = ["%Y-%m-%d"]
         self.fields["acquired_date"].input_formats = ["%Y-%m-%d"]
@@ -87,12 +90,15 @@ class PetForm(forms.ModelForm):
         return pet
 
     def clean_name(self):
+        """Удаляет лишние пробелы из начала и конца имени"""
         return self.cleaned_data["name"].strip()
 
     def clean_species_name(self):
+        """Удаляет лишние пробелы из начала и конца вида животного"""
         return self.cleaned_data["species_name"].strip()
 
     def clean_morph(self):
+        """Удаляет лишние пробелы из начала и конца названия морфы"""
         return self.cleaned_data.get("morph", "").strip()
 
 
@@ -100,6 +106,10 @@ class PetForm(forms.ModelForm):
 
 
 class BaseEventForm(forms.ModelForm):
+    """
+    Базовая форма создания события ухода.
+    Переопределяется для различных типов событий.
+    """
 
     class Meta:
         model = Event
@@ -115,7 +125,7 @@ class BaseEventForm(forms.ModelForm):
             "length_cm",
         ]
         labels = {
-            "pet": "Животное",
+            "pet": "Питомец",
             "event_type": "Тип события",
             "title": "Название",
             "event_datetime": "Дата и время",
@@ -141,6 +151,9 @@ class BaseEventForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        """
+        Пользователь может создавать события только для своего питомца.
+        """
         user = kwargs.pop("user", None)
         is_moderator = kwargs.pop("is_moderator", False)
         self.user = user
@@ -173,9 +186,11 @@ class BaseEventForm(forms.ModelForm):
         return timezone.make_aware(naive_local_dt, user_tz)
 
     def clean_title(self):
+        """Удаляет лишние пробелы из начала и конца названия события"""
         return self.cleaned_data.get("title", "").strip()
 
     def clean_comment(self):
+        """Удаляет лишние пробелы из начала и конца комментария"""
         return self.cleaned_data.get("comment", "").strip()
 
 
@@ -195,7 +210,7 @@ class FeedingEventForm(BaseEventForm):
             "comment",
         ]
         help_texts = {
-            "no_handling_days": "Сколько дней нельзя брать животное после кормления",
+            "no_handling_days": "Сколько дней нельзя брать питомца после кормления",
             "repeat_after_days": "Когда нужно следующее кормление",
         }
 
@@ -217,6 +232,8 @@ class SheddingEventForm(BaseEventForm):
 
 
 class CleaningEventForm(BaseEventForm):
+    """Форма для создания события 'Уборка'"""
+
     class Meta(BaseEventForm.Meta):
         fields = [
             "pet",
@@ -231,6 +248,8 @@ class CleaningEventForm(BaseEventForm):
 
 
 class MeasurementEventForm(BaseEventForm):
+    """Форма для создания события 'Линька'"""
+
     class Meta(BaseEventForm.Meta):
         fields = [
             "pet",
@@ -248,6 +267,8 @@ class MeasurementEventForm(BaseEventForm):
 
 
 class CustomEventForm(BaseEventForm):
+    """Форма для создания события 'Линька'"""
+
     class Meta(BaseEventForm.Meta):
         fields = [
             "pet",
