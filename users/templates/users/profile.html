@@ -12,6 +12,8 @@
     </div>
 </section>
 
+<!-- Блок информации о пользователе -->
+
 <section class="card-ui mb-4">
     <div class="d-flex flex-column flex-md-row gap-4 align-items-start">
         <div style="width: 140px;">
@@ -77,6 +79,9 @@
         </div>
     </div>
 </section>
+
+
+<!-- Блок настройки Telegram уведомлений -->
 
 {% if request.user == profile_user %}
 <section class="card-ui mb-4">
@@ -145,6 +150,8 @@
 </section>
 {% endif %}
 
+<!-- Блок карточек питомцев -->
+
 <section class="card-ui mb-4">
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
         <div>
@@ -177,11 +184,13 @@
     {% endif %}
 </section>
 
+<!-- Блок событий ухода -->
+
 <section class="card-ui">
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
         <div>
             <h2 class="section-title mb-2">Последние события</h2>
-            <p class="text-soft mb-0">Последние 10 записей по уходу за питомцами.</p>
+            <p class="text-soft mb-0">Последние 10 событий по уходу за питомцами.</p>
         </div>
 
         <div class="d-flex flex-wrap gap-3">

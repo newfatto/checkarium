@@ -1,6 +1,5 @@
 # Python
 __pycache__/
-*.py[codz]
 *.py[cod]
 *$py.class
 *.so
@@ -25,19 +24,19 @@ share/python-wheels/
 MANIFEST
 
 # Tests / coverage
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py.cover
-.hypothesis/
-.pytest_cache/
-cover/
+#htmlcov/
+#.tox/
+#.nox/
+#.coverage
+#.coverage.*
+#.cache
+#nosetests.xml
+#coverage.xml
+#*.cover
+#*.py.cover
+#.hypothesis/
+#.pytest_cache/
+#cover/
 
 # Django
 *.log
@@ -59,6 +58,7 @@ celerybeat.pid
 .venv
 env/
 venv/
+.venv/
 ENV/
 env.bak/
 venv.bak/
@@ -82,14 +82,19 @@ dmypy.json
 poetry.toml
 
 # Media
-media/
 media/*
 !media/demo/
 !media/demo/pets/
+!media/demo/pets/*.jpg
+!media/demo/pets/*.jpeg
+!media/demo/pets/*.png
 !media/demo/users/
-!media/demo/pets/**
-!media/demo/users/**
+!media/demo/users/*.jpg
+!media/demo/users/*.jpeg
+!media/demo/users/*.png
 
 # Django generated
 collected_static/
 
+
+database.ini

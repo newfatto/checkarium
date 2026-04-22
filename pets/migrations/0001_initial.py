@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             name="Pet",
             fields=[
                 ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("name", models.CharField(max_length=100, verbose_name="Имя животного")),
+                ("name", models.CharField(max_length=100, verbose_name="Имя питомца")),
                 (
                     "animal_type",
                     models.CharField(
@@ -54,7 +54,7 @@ class Migration(migrations.Migration):
                     "acquired_date",
                     models.DateField(
                         blank=True,
-                        help_text="Укажите, когда животное появилось у вас",
+                        help_text="Укажите, когда питомец появился у вас",
                         null=True,
                         verbose_name="Дата начала владения",
                     ),
@@ -152,7 +152,7 @@ class Migration(migrations.Migration):
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="events",
                         to="pets.pet",
-                        verbose_name="Животное",
+                        verbose_name="Питомец",
                     ),
                 ),
             ],

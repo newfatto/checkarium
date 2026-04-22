@@ -2,14 +2,13 @@ from collections.abc import Sequence
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
-from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 
 from .models import Event, Pet
 
 
 def get_pet_age_display(birth_date: date | None) -> str:
-    """Возвращает возраст питомца в удобном формате."""
+    """Возвращает возраст питомца в сокращённом человекочитаемом формате."""
     if not birth_date:
         return ""
 
@@ -62,7 +61,7 @@ def get_pet_age_display(birth_date: date | None) -> str:
 
 
 def get_owner_display(user) -> str:
-    """Возвращает имя владельца для показа в интерфейсе."""
+    """Возвращает отображаемое имя владельца: полное имя или email, если имя не заполнено."""
     full_name = f"{user.first_name or ''} {user.last_name or ''}".strip()
     if full_name:
         return full_name
@@ -70,21 +69,21 @@ def get_owner_display(user) -> str:
 
 
 def get_next_repeat_datetime(event: Event) -> datetime | None:
-    """Возвращает дату следующего повторения события."""
+    """Вычисляет дату и время следующего повторения события."""
     if not event.repeat_after_days:
         return None
     return event.event_datetime + timedelta(days=event.repeat_after_days)
 
 
 def get_no_handling_until(event: Event) -> datetime | None:
-    """Возвращает дату окончания ограничения handling."""
+    """Возвращает момент окончания периода, когда питомца нельзя трогать."""
     if not event.no_handling_days:
         return None
     return event.event_datetime + timedelta(days=event.no_handling_days)
 
 
 def _format_signed_diff(value: Decimal | int | float) -> str:
-    """Возвращает разницу со знаком для показа в комментарии."""
+    """Форматирует числовую разницу со знаком для отображения в интерфейсе."""
     decimal_value = Decimal(str(value))
 
     sign = "+" if decimal_value > 0 else "-"
@@ -113,7 +112,7 @@ def get_previous_measurement_event(event: Event) -> Event | None:
 
 
 def get_measurement_comment_lines(event: Event) -> list[str]:
-    """Формирует строки комментария для события измерения."""
+    """Собирает строки комментария для события измерения, включая разницу с прошлым измерением."""
     if event.event_type != Event.EventType.MEASUREMENT:
         return []
 
@@ -149,7 +148,8 @@ def get_measurement_comment_lines(event: Event) -> list[str]:
 
 
 def get_upcoming_pet_tasks(pet: Pet) -> list[str]:
-    """Возвращает список ближайших действий по питомцу."""
+    """Возвращает отсортированный список ближайших повторяющихся задач по питомцу
+    для показа в интерфейсе."""
     event_type_map: Sequence[tuple[str, str]] = (
         (Event.EventType.FEEDING, "Покормить"),
         (Event.EventType.CLEANING, "Убраться"),
@@ -182,7 +182,7 @@ def get_upcoming_pet_tasks(pet: Pet) -> list[str]:
 
 
 def get_repeat_comment(event: Event) -> str:
-    """Формирует строку следующего повторения события."""
+    """Формирует строку о следующем повторении события для показа в интерфейсе."""
     next_dt = get_next_repeat_datetime(event)
     if not next_dt:
         return ""
@@ -198,7 +198,7 @@ def get_repeat_comment(event: Event) -> str:
 
 
 def get_handling_comment(event: Event) -> str:
-    """Формирует строку запрета handling."""
+    """Формирует строку с датой и временем окончания запрета на контакт с питомцем."""
     until_dt = get_no_handling_until(event)
     if not until_dt:
         return ""
@@ -229,11 +229,12 @@ def get_event_comment_lines(event: Event) -> list[str]:
 
 
 def get_event_comment_display(event: Event) -> str:
-    """Возвращает текст комментария для таблиц."""
+    """Объединяет строки комментария события в один многострочный текст для отображения в таблицах и карточках."""
     return "\n".join(get_event_comment_lines(event))
 
 
 def get_pet_no_handling_until(pet: Pet) -> datetime | None:
+    """Возвращает дату окончания последнего активного ограничения на контакт с питомцем."""
     event = pet.events.filter(no_handling_days__isnull=False).order_by("-event_datetime").first()
     if not event:
         return None
@@ -241,7 +242,7 @@ def get_pet_no_handling_until(pet: Pet) -> datetime | None:
 
 
 def pet_can_handle(pet: Pet) -> bool:
-    """Можно ли сейчас трогать питомца."""
+    """Проверяет, можно ли сейчас брать питомца в руки."""
     until_dt = get_pet_no_handling_until(pet)
     if not until_dt:
         return True
@@ -249,7 +250,7 @@ def pet_can_handle(pet: Pet) -> bool:
 
 
 def pet_is_in_shedding(pet: Pet) -> bool:
-    """Идёт ли сейчас линька с ограничением handling."""
+    """Проверяет, идёт ли у питомца линька с ещё не истекшим ограничением на контакт."""
     event = (
         pet.events.filter(
             event_type=Event.EventType.SHEDDING,
@@ -270,7 +271,7 @@ def pet_is_in_shedding(pet: Pet) -> bool:
 
 
 def get_pet_shedding_until(pet: Pet) -> datetime | None:
-    """Возвращает дату окончания текущей линьки питомца."""
+    """Возвращает дату окончания текущей линьки питомца, если она ещё не завершилась."""
     event = (
         pet.events.filter(
             event_type=Event.EventType.SHEDDING,
@@ -294,7 +295,7 @@ def get_pet_shedding_until(pet: Pet) -> datetime | None:
 
 
 def build_pet_card_context(pet: Pet, user) -> dict:
-    """Собирает контекст карточки питомца."""
+    """Собирает контекст для отображения карточки питомца в шаблоне."""
     is_authenticated = bool(user and user.is_authenticated)
     is_pet_owner = bool(is_authenticated and user.id == pet.owner_id)
     is_pet_moderator = bool(is_authenticated and (user.is_superuser or user.groups.filter(name="Moderators").exists()))
@@ -312,10 +313,8 @@ def build_pet_card_context(pet: Pet, user) -> dict:
 
 
 def build_event_row_context(event: Event) -> dict:
-    """Собирает контекст строки события."""
+    """Собирает контекст для отображения одной строки события в шаблоне."""
     return {
         "event": event,
         "event_comment_display": get_event_comment_display(event),
     }
-
-

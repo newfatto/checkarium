@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from datetime import timedelta
 
 from django.contrib.auth.models import Group
@@ -28,9 +26,7 @@ class Command(BaseCommand):
     }
 
     demo_emails = tuple(demo_credentials.keys())
-    moderator_emails = (
-        "moderator@checkarium.local",
-    )
+    moderator_emails = ("moderator@checkarium.local",)
 
     def add_arguments(self, parser) -> None:
         """Добавляет аргументы management-команды."""
@@ -291,7 +287,7 @@ class Command(BaseCommand):
             event_type=Event.EventType.CUSTOM,
             dt=now - timedelta(days=25),
             title="Передача",
-            comment="Животное передано другому владельцу.",
+            comment="Питомец передан другому владельцу.",
         )
 
     def _seed_ball_python_events(self, pet: Pet, now) -> None:

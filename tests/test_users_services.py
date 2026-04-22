@@ -1,4 +1,3 @@
-from datetime import timedelta
 from unittest.mock import Mock, patch
 
 import pytest
@@ -6,11 +5,14 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from users.services import (
+    build_daily_care_notification_text,
+    build_pet_notification_block,
     build_telegram_welcome_text,
     create_telegram_deep_link_for_user,
     disable_care_notifications,
     enable_care_notifications,
     generate_telegram_link_token,
+    get_pet_tasks_for_today,
     get_telegram_updates,
     link_telegram_account_by_token,
     send_telegram_message,
@@ -159,3 +161,38 @@ def test_get_telegram_updates(mock_get):
 
     assert result == [{"update_id": 1}]
     mock_get.assert_called_once()
+
+
+@pytest.mark.django_db
+def test_get_pet_tasks_for_today_always_contains_change_water(user, pet):
+    tasks = get_pet_tasks_for_today(pet, user)
+    assert "поменяй воду" in tasks
+
+
+@pytest.mark.django_db
+def test_build_pet_notification_block_contains_pet_name_and_tasks(user, pet):
+    text = build_pet_notification_block(pet, user)
+
+    assert pet.name in text
+    assert "Важные дела на сегодня" in text or "важных дел нет" in text.lower()
+
+
+@pytest.mark.django_db
+def test_build_daily_care_notification_text_contains_header_and_events_url(user, settings):
+    settings.SITE_URL = "https://example.com"
+
+    text = build_daily_care_notification_text(user)
+
+    assert "Доброе утро" in text
+    assert "https://example.com/pets/events/" in text
+
+
+@pytest.mark.django_db
+def test_build_daily_care_notification_text_for_user_without_pets(user, settings):
+    settings.SITE_URL = "https://example.com"
+    user.pets.all().delete()
+
+    text = build_daily_care_notification_text(user)
+
+    assert "У вас пока нет питомцев в системе." in text
+    assert "https://example.com/pets/events/" in text
