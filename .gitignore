@@ -23,20 +23,20 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Tests / coverage
-#htmlcov/
-#.tox/
-#.nox/
-#.coverage
-#.coverage.*
-#.cache
-#nosetests.xml
-#coverage.xml
-#*.cover
-#*.py.cover
-#.hypothesis/
-#.pytest_cache/
-#cover/
+ Tests / coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py.cover
+.hypothesis/
+.pytest_cache/
+cover/
 
 # Django
 *.log
